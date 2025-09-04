@@ -1,0 +1,119 @@
+[
+  {
+    "week": 1,
+    "results": [
+      {
+        "homeTeam": "Philadelphia Eagles",
+        "awayTeam": "Dallas Cowboys",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Los Angeles Chargers",
+        "awayTeam": "Kansas City Chiefs",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Atlanta Falcons",
+        "awayTeam": "Tampa Bay Buccaneers",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Cleveland Browns",
+        "awayTeam": "Cincinnati Bengals",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Indianapolis Colts",
+        "awayTeam": "Miami Dolphins",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "New England Patriots",
+        "awayTeam": "Las Vegas Raiders",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "New Orleans Saints",
+        "awayTeam": "Arizona Cardinals",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "New York Jets",
+        "awayTeam": "Pittsburgh Steelers",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Washington Commanders",
+        "awayTeam": "New York Giants",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Jacksonville Jaguars",
+        "awayTeam": "Carolina Panthers",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Denver Broncos",
+        "awayTeam": "Tennessee Titans",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Seattle Seahawks",
+        "awayTeam": "San Francisco 49ers",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Green Bay Packers",
+        "awayTeam": "Detroit Lions",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Los Angeles Rams",
+        "awayTeam": "Houston Texans",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Buffalo Bills",
+        "awayTeam": "Baltimore Ravens",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      },
+      {
+        "homeTeam": "Chicago Bears",
+        "awayTeam": "Minnesota Vikings",
+        "winner": "",
+        "homeScore": null,
+        "awayScore": null
+      }
+    ]
+  }
+]

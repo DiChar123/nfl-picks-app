@@ -1,0 +1,88 @@
+[
+  {
+    "week": 1,
+    "bye": [],
+    "games": [
+      {
+        "homeTeam": "PHI",
+        "awayTeam": "DAL",
+        "date": "2025-09-04T22:20:00Z"
+      },
+      {
+        "homeTeam": "LAR",
+        "awayTeam": "KC",
+        "date": "2025-09-06T22:00:00Z"
+      },
+      {
+        "homeTeam": "ATL",
+        "awayTeam": "TB",
+        "date": "2025-09-07T15:00:00Z"
+      },
+      {
+        "homeTeam": "CLE",
+        "awayTeam": "CIN",
+        "date": "2025-09-07T15:00:00Z"
+      },
+      {
+        "homeTeam": "IND",
+        "awayTeam": "MIA",
+        "date": "2025-09-07T15:00:00Z"
+      },
+      {
+        "homeTeam": "NE",
+        "awayTeam": "LV",
+        "date": "2025-09-07T15:00:00Z"
+      },
+      {
+        "homeTeam": "NO",
+        "awayTeam": "ARI",
+        "date": "2025-09-07T15:00:00Z"
+      },
+      {
+        "homeTeam": "NYJ",
+        "awayTeam": "PIT",
+        "date": "2025-09-07T15:00:00Z"
+      },
+      {
+        "homeTeam": "WSH",
+        "awayTeam": "NYG",
+        "date": "2025-09-07T15:00:00Z"
+      },
+      {
+        "homeTeam": "JAX",
+        "awayTeam": "CAR",
+        "date": "2025-09-07T15:00:00Z"
+      },
+      {
+        "homeTeam": "DEN",
+        "awayTeam": "TEN",
+        "date": "2025-09-07T18:05:00Z"
+      },
+      {
+        "homeTeam": "SEA",
+        "awayTeam": "SF",
+        "date": "2025-09-07T18:05:00Z"
+      },
+      {
+        "homeTeam": "GB",
+        "awayTeam": "DET",
+        "date": "2025-09-07T18:25:00Z"
+      },
+      {
+        "homeTeam": "HOU",
+        "awayTeam": "LAC",
+        "date": "2025-09-07T18:25:00Z"
+      },
+      {
+        "homeTeam": "BUF",
+        "awayTeam": "BAL",
+        "date": "2025-09-07T22:20:00Z"
+      },
+      {
+        "homeTeam": "CHI",
+        "awayTeam": "MIN",
+        "date": "2025-09-09T22:15:00Z"
+      }
+    ]
+  }
+]
