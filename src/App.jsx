@@ -5,6 +5,8 @@ import Leaderboard from './Leaderboard';
 import db from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
+const BACKEND_URL = 'https://your-backend-url.vercel.app'; // <-- Replace with your deployed backend URL
+
 function App() {
   const teamAbbrToFullName = {
     PHI: "Philadelphia Eagles",
@@ -94,7 +96,7 @@ function App() {
 
   const fetchSchedule = async () => {
     try {
-      const response = await fetch('/api/schedule'); // ✅ Vercel-ready
+      const response = await fetch(`${BACKEND_URL}/api/schedule`);
       const data = await response.json();
       setSchedule(data);
     } catch (error) {
@@ -104,7 +106,7 @@ function App() {
 
   const fetchResults = async () => {
     try {
-      const response = await fetch('/results.json');
+      const response = await fetch(`${BACKEND_URL}/results.json`);
       const data = await response.json();
       setResults(data);
     } catch (error) {
@@ -112,16 +114,13 @@ function App() {
     }
   };
 
-  // UPDATED handlePick with toggle deselect logic
   const handlePick = async (week, gameIndex, team) => {
     const updatedPicks = { ...userPicks };
     const weekPicks = updatedPicks[week] ? { ...updatedPicks[week] } : {};
 
     if (weekPicks[gameIndex] === team) {
-      // If same team clicked again, clear the pick
       delete weekPicks[gameIndex];
     } else {
-      // Otherwise select the new team
       weekPicks[gameIndex] = team;
     }
 
@@ -145,13 +144,11 @@ function App() {
     }
   };
 
-  const handleWeekChange = (e) => {
-    setSelectedWeek(Number(e.target.value));
-  };
+  const handleWeekChange = (e) => setSelectedWeek(Number(e.target.value));
 
   const handleManualUpdate = async () => {
     try {
-      await fetch('/api/update-all', { method: 'POST' }); // ✅ Vercel-ready
+      await fetch(`${BACKEND_URL}/api/update-all`, { method: 'POST' });
       alert('Schedule and results updated');
       fetchSchedule();
       fetchResults();
