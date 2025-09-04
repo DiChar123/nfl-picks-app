@@ -5,7 +5,7 @@ import Leaderboard from './Leaderboard';
 import db from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
-const BACKEND_URL = 'https://your-backend-url.vercel.app'; // <-- Replace with your deployed backend URL
+const BACKEND_URL = 'https://nfl-picks-app-git-main-dillon-charlebois-projects.vercel.app'; // <-- Your deployed backend URL
 
 function App() {
   const teamAbbrToFullName = {
@@ -51,6 +51,7 @@ function App() {
   const [pin, setPin] = useState('');
   const [userPicks, setUserPicks] = useState({});
 
+  // Load username and PIN
   useEffect(() => {
     let storedUsername = localStorage.getItem('username');
     let storedPin = localStorage.getItem('pin');
@@ -89,6 +90,7 @@ function App() {
     }
   };
 
+  // Fetch schedule and results
   useEffect(() => {
     fetchSchedule();
     fetchResults();
@@ -98,7 +100,13 @@ function App() {
     try {
       const response = await fetch(`${BACKEND_URL}/api/schedule`);
       const data = await response.json();
+      console.log('Schedule loaded:', data); // <-- Debug log
       setSchedule(data);
+
+      // Set selectedWeek to first available week if current selectedWeek invalid
+      if (!data.find(w => w.week === selectedWeek)) {
+        setSelectedWeek(data[0]?.week || 1);
+      }
     } catch (error) {
       console.error('Error loading schedule:', error);
     }
@@ -158,6 +166,7 @@ function App() {
   };
 
   const selectedSchedule = schedule.find((week) => week.week === selectedWeek);
+  console.log('Selected week schedule:', selectedSchedule); // <-- Debug log
 
   const formatReadableDate = (isoDate) => {
     if (!isoDate) return 'TBD';
@@ -286,7 +295,7 @@ function App() {
           })}
         </div>
       ) : (
-        <p>No games for this week.</p>
+        <p>Loading schedule...</p>
       )}
     </div>
   );
