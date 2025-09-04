@@ -5,7 +5,7 @@ import Leaderboard from './Leaderboard';
 import db from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
-const BASE_URL = '/nfl-picks-app'; // Remove trailing slash for fetch
+const BASE_URL = '/'; // Remove trailing slash for fetch
 
 function App() {
   const teamAbbrToFullName = {
