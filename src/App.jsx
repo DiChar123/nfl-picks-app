@@ -5,7 +5,7 @@ import Leaderboard from './Leaderboard';
 import db from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
-const BASE_URL = '/nfl-picks-app'; // Works for GitHub Pages or Vercel
+const BASE_URL = '/nfl-picks-app'; // Remove trailing slash for fetch
 
 function App() {
   const teamAbbrToFullName = {
@@ -109,7 +109,14 @@ function App() {
     try {
       const response = await fetch(`${BASE_URL}/results.json`);
       const data = await response.json();
-      setResults(data);
+
+      // Add 'index' property to each game to match your code
+      const indexedResults = data.map((week) => ({
+        week: week.week,
+        results: week.results.map((game, idx) => ({ ...game, index: idx })),
+      }));
+
+      setResults(indexedResults);
     } catch (error) {
       console.error('Error loading results:', error);
     }
@@ -169,7 +176,7 @@ function App() {
       <h1>NFL 2025 Touchdown Throwdown</h1>
 
       <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-        <img src={`${BASE_URL}/app logo.png`} alt="App Logo" style={{ width: '140px', height: 'auto' }} />
+        <img src={`${BASE_URL}/app-logo.png`} alt="App Logo" style={{ width: '140px', height: 'auto' }} />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
