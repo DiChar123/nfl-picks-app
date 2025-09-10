@@ -3,16 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://dichar123.github.io/nfl-picks-app/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "manual-update": "node src/updateResults.js",
-    "start-server": "node server.cjs",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "start-server": "node server.cjs"
   },
   "dependencies": {
     "axios": "^1.9.0",
