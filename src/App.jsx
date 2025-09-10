@@ -1,11 +1,10 @@
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import teamLogos from './teamLogos';
 import Leaderboard from './Leaderboard';
 import db from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-
-const BASE_URL = '/'; // Remove trailing slash for fetch
 
 function App() {
   const teamAbbrToFullName = {
@@ -51,7 +50,7 @@ function App() {
   const [pin, setPin] = useState('');
   const [userPicks, setUserPicks] = useState({});
 
-  // Load username and PIN
+  // Load username and PIN from localStorage or prompt
   useEffect(() => {
     let storedUsername = localStorage.getItem('username');
     let storedPin = localStorage.getItem('pin');
@@ -85,8 +84,7 @@ function App() {
       console.error('Error loading picks:', error);
     }
   };
-
-  // Fetch schedule and results
+  // Fetch schedule and results on load
   useEffect(() => {
     fetchSchedule();
     fetchResults();
@@ -94,31 +92,31 @@ function App() {
 
   const fetchSchedule = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/schedule.json`);
+      const response = await fetch('/schedule.json'); // Vercel-friendly path
       const data = await response.json();
-      setSchedule(data);
+      console.log('Loaded schedule:', data); // debug in case of issues
+      setSchedule(data || []);
       if (!data.find(w => w.week === selectedWeek)) {
         setSelectedWeek(data[0]?.week || 1);
       }
     } catch (error) {
       console.error('Error loading schedule:', error);
+      setSchedule([]);
     }
   };
 
   const fetchResults = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/results.json`);
+      const response = await fetch('/results.json'); // adjust if needed
       const data = await response.json();
-
-      // Add 'index' property to each game to match your code
-      const indexedResults = data.map((week) => ({
+      const indexedResults = (data || []).map((week) => ({
         week: week.week,
-        results: week.results.map((game, idx) => ({ ...game, index: idx })),
+        results: (week.results || []).map((game, idx) => ({ ...game, index: idx })),
       }));
-
       setResults(indexedResults);
     } catch (error) {
       console.error('Error loading results:', error);
+      setResults([]);
     }
   };
 
@@ -142,7 +140,7 @@ function App() {
 
   const handleManualUpdate = async () => {
     try {
-      await fetch(`${BASE_URL}/api/update-all`, { method: 'POST' });
+      await fetch('/api/update-all', { method: 'POST' });
       fetchSchedule();
       fetchResults();
       alert('Schedule and results updated');
@@ -176,7 +174,7 @@ function App() {
       <h1>NFL 2025 Touchdown Throwdown</h1>
 
       <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-        <img src={`${BASE_URL}/app-logo.png`} alt="App Logo" style={{ width: '140px', height: 'auto' }} />
+        <img src="/app-logo.png" alt="App Logo" style={{ width: '140px', height: 'auto' }} />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -192,7 +190,7 @@ function App() {
           <div>
             <label style={{ marginRight: '5px' }}>Select Week:</label>
             <select value={selectedWeek} onChange={handleWeekChange}>
-              {(schedule ?? []).map((week) => (
+              {(schedule || []).map((week) => (
                 <option key={week.week} value={week.week}>
                   Week {week.week}
                 </option>
@@ -206,7 +204,7 @@ function App() {
         <Leaderboard />
       ) : selectedSchedule ? (
         <div className="week">
-          {(selectedSchedule.games ?? []).map((game, index) => {
+          {(selectedSchedule.games || []).map((game, index) => {
             const homeFullName = teamAbbrToFullName[game.homeTeam] || game.homeTeam;
             const awayFullName = teamAbbrToFullName[game.awayTeam] || game.awayTeam;
             const userPick = userPicks?.[selectedWeek]?.[index];
