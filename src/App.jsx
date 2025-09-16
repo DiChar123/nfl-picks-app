@@ -1,4 +1,4 @@
-// src/App.jsx (Part 1 – corrected)
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import teamLogos from './teamLogos';
@@ -42,11 +42,7 @@ function App() {
     MIN: "Minnesota Vikings"
   };
 
-  const [selectedWeek, setSelectedWeek] = useState(() => {
-    // Preserve last selected week from localStorage
-    const savedWeek = localStorage.getItem('selectedWeek');
-    return savedWeek ? Number(savedWeek) : 1;
-  });
+  const [selectedWeek, setSelectedWeek] = useState(1);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [results, setResults] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -57,6 +53,7 @@ function App() {
   useEffect(() => {
     let storedUsername = localStorage.getItem('username');
     let storedPin = localStorage.getItem('pin');
+    let storedWeek = Number(localStorage.getItem('selectedWeek'));
 
     if (!storedUsername || !storedPin) {
       storedUsername = window.prompt('Enter your username:');
@@ -72,6 +69,8 @@ function App() {
       setPin(storedPin);
       loadPicks(storedUsername, storedPin);
     }
+
+    if (storedWeek) setSelectedWeek(storedWeek);
   }, []);
 
   const loadPicks = async (uname, upin) => {
@@ -92,19 +91,16 @@ function App() {
     fetchSchedule();
     fetchResults();
   }, []);
-
   const fetchSchedule = async () => {
     try {
       const response = await fetch('/schedule.json');
       const data = await response.json();
       setSchedule(data || []);
 
-      // Ensure selectedWeek is valid and exists in the schedule
-      if (!data.find(w => w.week === selectedWeek)) {
-        const firstAvailableWeek = data[0]?.week || 1;
-        setSelectedWeek(firstAvailableWeek);
-        localStorage.setItem('selectedWeek', firstAvailableWeek);
-      }
+      // Preserve last selected week if available, otherwise default to first week
+      const lastWeek = Number(localStorage.getItem('selectedWeek')) || data[0]?.week || 1;
+      const weekExists = data.find(w => w.week === lastWeek);
+      setSelectedWeek(weekExists ? lastWeek : data[0]?.week || 1);
     } catch (error) {
       console.error('Error loading schedule:', error);
       setSchedule([]);
@@ -141,6 +137,7 @@ function App() {
       console.error('Error saving pick:', error);
     }
   };
+
   const handleWeekChange = (e) => {
     const week = Number(e.target.value);
     setSelectedWeek(week);
@@ -150,8 +147,8 @@ function App() {
   const handleManualUpdate = async () => {
     try {
       await fetch('/api/update-all', { method: 'POST' });
-      await fetchSchedule();
-      await fetchResults();
+      fetchSchedule();
+      fetchResults();
       alert('Schedule and results updated');
     } catch (error) {
       console.error('Manual update failed:', error);
@@ -214,6 +211,8 @@ function App() {
       ) : selectedSchedule ? (
         <div className="week">
           {(selectedSchedule.games || []).map((game, index) => {
+            if (!game) return null;
+
             const homeFullName = teamAbbrToFullName[game.homeTeam] || game.homeTeam;
             const awayFullName = teamAbbrToFullName[game.awayTeam] || game.awayTeam;
             const userPick = userPicks?.[selectedWeek]?.[index];
