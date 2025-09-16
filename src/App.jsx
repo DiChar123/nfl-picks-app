@@ -42,7 +42,11 @@ function App() {
     MIN: "Minnesota Vikings"
   };
 
-  const [selectedWeek, setSelectedWeek] = useState(1);
+  // Use last selected week from localStorage or default to 1
+  const [selectedWeek, setSelectedWeek] = useState(() => {
+    const storedWeek = localStorage.getItem('selectedWeek');
+    return storedWeek ? Number(storedWeek) : 1;
+  });
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [results, setResults] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -94,8 +98,13 @@ function App() {
       const response = await fetch('/schedule.json');
       const data = await response.json();
       setSchedule(data || []);
-      if (!data.find(w => w.week === selectedWeek)) {
-        setSelectedWeek(data[0]?.week || 1);
+
+      // Ensure selectedWeek is valid
+      const weekExists = data.some(w => w.week === selectedWeek);
+      if (!weekExists) {
+        const lastWeek = data[data.length - 1]?.week || 1;
+        setSelectedWeek(lastWeek);
+        localStorage.setItem('selectedWeek', lastWeek);
       }
     } catch (error) {
       console.error('Error loading schedule:', error);
@@ -133,14 +142,17 @@ function App() {
       console.error('Error saving pick:', error);
     }
   };
-
-  const handleWeekChange = (e) => setSelectedWeek(Number(e.target.value));
+  const handleWeekChange = (e) => {
+    const week = Number(e.target.value);
+    setSelectedWeek(week);
+    localStorage.setItem('selectedWeek', week);
+  };
 
   const handleManualUpdate = async () => {
     try {
       await fetch('/api/update-all', { method: 'POST' });
-      fetchSchedule();
-      fetchResults();
+      await fetchSchedule();
+      await fetchResults();
       alert('Schedule and results updated');
     } catch (error) {
       console.error('Manual update failed:', error);
