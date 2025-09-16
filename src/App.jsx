@@ -1,4 +1,4 @@
-// src/App.jsx — Part 1
+// src/App.jsx (Part 1)
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import teamLogos from './teamLogos';
@@ -42,12 +42,11 @@ function App() {
     MIN: "Minnesota Vikings"
   };
 
-  // --- Preserve last selected week using localStorage ---
   const [selectedWeek, setSelectedWeek] = useState(() => {
-    const storedWeek = localStorage.getItem('selectedWeek');
-    return storedWeek ? Number(storedWeek) : 1;
+    // Preserve last selected week from localStorage
+    const savedWeek = localStorage.getItem('selectedWeek');
+    return savedWeek ? Number(savedWeek) : 1;
   });
-
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [results, setResults] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -100,10 +99,11 @@ function App() {
       const data = await response.json();
       setSchedule(data || []);
 
-      // --- Only reset selectedWeek if the stored week does not exist in schedule ---
+      // Ensure selectedWeek is valid and exists in the schedule
       if (!data.find(w => w.week === selectedWeek)) {
-        setSelectedWeek(data[0]?.week || 1);
-        localStorage.setItem('selectedWeek', data[0]?.week || 1);
+        const firstAvailableWeek = data[0]?.week || 1;
+        setSelectedWeek(firstAvailableWeek);
+        localStorage.setItem('selectedWeek', firstAvailableWeek);
       }
     } catch (error) {
       console.error('Error loading schedule:', error);
@@ -142,22 +142,22 @@ function App() {
     }
   };
 
-  // --- Updated handleWeekChange to store selected week ---
-  const handleWeekChange = (e) => {
-    const newWeek = Number(e.target.value);
-    setSelectedWeek(newWeek);
-    localStorage.setItem('selectedWeek', newWeek);
+  const formatReadableDate = (isoDate) => {
+    if (!isoDate) return 'TBD';
+    const dateObj = new Date(isoDate);
+    return dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
-  const handleManualUpdate = async () => {
-    try {
-      await fetch('/api/update-all', { method: 'POST' });
-      fetchSchedule();
-      fetchResults();
-      alert('Schedule and results updated');
-    } catch (error) {
-      console.error('Manual update failed:', error);
-    }
+  const formatReadableTime = (isoDate) => {
+    if (!isoDate) return 'TBD';
+    const dateObj = new Date(isoDate);
+    return dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) + ' ET';
+  };
+
+  const isPickLocked = (isoDate) => {
+    if (!isoDate) return false;
+    const gameTime = new Date(isoDate).getTime();
+    return Date.now() >= gameTime - 5 * 60000;
   };
   const handleWeekChange = (e) => {
     const week = Number(e.target.value);
