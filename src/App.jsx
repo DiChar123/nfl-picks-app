@@ -1,4 +1,4 @@
-// src/App.jsx (Part 1)
+// src/App.jsx (Part 1 – corrected)
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import teamLogos from './teamLogos';
@@ -140,24 +140,6 @@ function App() {
     } catch (error) {
       console.error('Error saving pick:', error);
     }
-  };
-
-  const formatReadableDate = (isoDate) => {
-    if (!isoDate) return 'TBD';
-    const dateObj = new Date(isoDate);
-    return dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-  };
-
-  const formatReadableTime = (isoDate) => {
-    if (!isoDate) return 'TBD';
-    const dateObj = new Date(isoDate);
-    return dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) + ' ET';
-  };
-
-  const isPickLocked = (isoDate) => {
-    if (!isoDate) return false;
-    const gameTime = new Date(isoDate).getTime();
-    return Date.now() >= gameTime - 5 * 60000;
   };
   const handleWeekChange = (e) => {
     const week = Number(e.target.value);
