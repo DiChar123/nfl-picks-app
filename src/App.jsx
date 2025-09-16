@@ -42,7 +42,10 @@ function App() {
     MIN: "Minnesota Vikings"
   };
 
-  const [selectedWeek, setSelectedWeek] = useState(1);
+  const [selectedWeek, setSelectedWeek] = useState(() => {
+    const storedWeek = localStorage.getItem('selectedWeek');
+    return storedWeek ? Number(storedWeek) : 1;
+  });
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [results, setResults] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -50,10 +53,10 @@ function App() {
   const [pin, setPin] = useState('');
   const [userPicks, setUserPicks] = useState({});
 
+  // Load username and PIN from localStorage or prompt
   useEffect(() => {
     let storedUsername = localStorage.getItem('username');
     let storedPin = localStorage.getItem('pin');
-    let storedWeek = Number(localStorage.getItem('selectedWeek'));
 
     if (!storedUsername || !storedPin) {
       storedUsername = window.prompt('Enter your username:');
@@ -69,8 +72,6 @@ function App() {
       setPin(storedPin);
       loadPicks(storedUsername, storedPin);
     }
-
-    if (storedWeek) setSelectedWeek(storedWeek);
   }, []);
 
   const loadPicks = async (uname, upin) => {
@@ -97,10 +98,13 @@ function App() {
       const data = await response.json();
       setSchedule(data || []);
 
-      // Preserve last selected week if available, otherwise default to first week
-      const lastWeek = Number(localStorage.getItem('selectedWeek')) || data[0]?.week || 1;
-      const weekExists = data.find(w => w.week === lastWeek);
-      setSelectedWeek(weekExists ? lastWeek : data[0]?.week || 1);
+      // Ensure selectedWeek is valid after loading schedule
+      const validWeek = data.find(w => w.week === selectedWeek);
+      if (!validWeek) {
+        const firstWeek = data[0]?.week || 1;
+        setSelectedWeek(firstWeek);
+        localStorage.setItem('selectedWeek', firstWeek);
+      }
     } catch (error) {
       console.error('Error loading schedule:', error);
       setSchedule([]);
@@ -174,7 +178,6 @@ function App() {
     const gameTime = new Date(isoDate).getTime();
     return Date.now() >= gameTime - 5 * 60000;
   };
-
   return (
     <div className="app">
       <h1>NFL 2025 Touchdown Throwdown</h1>
@@ -196,7 +199,7 @@ function App() {
           <div>
             <label style={{ marginRight: '5px' }}>Select Week:</label>
             <select value={selectedWeek} onChange={handleWeekChange}>
-              {(schedule || []).map((week) => (
+              {schedule?.map((week) => (
                 <option key={week.week} value={week.week}>
                   Week {week.week}
                 </option>
@@ -208,18 +211,16 @@ function App() {
 
       {showLeaderboard ? (
         <Leaderboard />
-      ) : selectedSchedule ? (
+      ) : selectedSchedule?.games?.length ? (
         <div className="week">
-          {(selectedSchedule.games || []).map((game, index) => {
-            if (!game) return null;
-
-            const homeFullName = teamAbbrToFullName[game.homeTeam] || game.homeTeam;
-            const awayFullName = teamAbbrToFullName[game.awayTeam] || game.awayTeam;
+          {selectedSchedule.games.map((game, index) => {
+            const homeFullName = teamAbbrToFullName[game?.homeTeam] || game?.homeTeam;
+            const awayFullName = teamAbbrToFullName[game?.awayTeam] || game?.awayTeam;
             const userPick = userPicks?.[selectedWeek]?.[index];
-            const isLocked = isPickLocked(game.date);
+            const isLocked = isPickLocked(game?.date);
 
-            const weekResult = results.find((r) => r.week === selectedWeek);
-            const gameResult = weekResult?.results?.find((g) => g.index === index);
+            const weekResult = results?.find((r) => r?.week === selectedWeek);
+            const gameResult = weekResult?.results?.find((g) => g?.index === index);
 
             return (
               <div key={index} className="game">
@@ -229,39 +230,27 @@ function App() {
                   <img src={teamLogos[homeFullName]} alt={homeFullName} width="60" height="60" />
                 </p>
                 <p style={{ textAlign: 'center', margin: '5px 0' }}>
-                  {formatReadableDate(game.date)} | {formatReadableTime(game.date)}
+                  {formatReadableDate(game?.date)} | {formatReadableTime(game?.date)}
                 </p>
 
-                {gameResult?.homeScore !== null && gameResult?.awayScore !== null && (
+                {gameResult?.homeScore != null && gameResult?.awayScore != null && (
                   <p style={{ textAlign: 'center', margin: '5px 0', fontWeight: 'bold' }}>
-                    Score: {gameResult.awayTeam} {gameResult.awayScore} — {gameResult.homeTeam} {gameResult.homeScore}
+                    Score: {gameResult?.awayTeam} {gameResult?.awayScore} — {gameResult?.homeTeam} {gameResult?.homeScore}
                   </p>
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <button
-                    onClick={() => handlePick(selectedWeek, index, awayFullName)}
-                    disabled={isLocked}
-                    className={userPick === awayFullName ? 'selected' : ''}
-                  >
+                  <button onClick={() => handlePick(selectedWeek, index, awayFullName)} disabled={isLocked} className={userPick === awayFullName ? 'selected' : ''}>
                     Pick {awayFullName}
                   </button>
-                  <button
-                    onClick={() => handlePick(selectedWeek, index, homeFullName)}
-                    disabled={isLocked}
-                    className={userPick === homeFullName ? 'selected' : ''}
-                  >
+                  <button onClick={() => handlePick(selectedWeek, index, homeFullName)} disabled={isLocked} className={userPick === homeFullName ? 'selected' : ''}>
                     Pick {homeFullName}
                   </button>
                 </div>
 
-                {gameResult && gameResult.winner && (
+                {gameResult?.winner && (
                   <p style={{ textAlign: 'center', color: !userPick ? 'gray' : userPick === gameResult.winner ? 'green' : 'red' }}>
-                    {!userPick
-                      ? `🏆 Winner: ${gameResult.winner}`
-                      : userPick === gameResult.winner
-                      ? '✅ Correct Pick!'
-                      : `❌ Wrong Pick — Winner: ${gameResult.winner}`}
+                    {!userPick ? `🏆 Winner: ${gameResult.winner}` : userPick === gameResult.winner ? '✅ Correct Pick!' : `❌ Wrong Pick — Winner: ${gameResult.winner}`}
                   </p>
                 )}
 

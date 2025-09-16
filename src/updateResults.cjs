@@ -96,21 +96,32 @@ async function fetchResultsAndSchedule() {
     if (schedIndex !== -1) scheduleData[schedIndex] = updatedSchedule;
     else scheduleData.push(updatedSchedule);
 
-    // --- Ensure all weeks 1–18 exist
+    // --- Ensure all weeks 1–18 exist in results and schedule
     for (let wk = 1; wk <= 18; wk++) {
       if (!resultsData.find(w => w.week === wk)) {
-        resultsData.push({ week: wk, results: [] });
+        resultsData.push({
+          week: wk,
+          results: [] // empty results for TBD games
+        });
       }
       if (!scheduleData.find(w => w.week === wk)) {
-        scheduleData.push({ week: wk, bye: [], games: [] });
+        scheduleData.push({
+          week: wk,
+          bye: [],
+          games: [] // empty schedule for TBD
+        });
       }
     }
+
+    // --- Sort arrays by week number
+    resultsData.sort((a, b) => a.week - b.week);
+    scheduleData.sort((a, b) => a.week - b.week);
 
     // --- Write JSON back to public
     fs.writeFileSync(resultsFilePath, JSON.stringify(resultsData, null, 2));
     fs.writeFileSync(scheduleFilePath, JSON.stringify(scheduleData, null, 2));
 
-    // --- Firestore Sync
+    // --- Firestore Sync (only update current week)
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
