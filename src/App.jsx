@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx — Part 1
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import teamLogos from './teamLogos';
@@ -42,11 +42,12 @@ function App() {
     MIN: "Minnesota Vikings"
   };
 
-  // Use last selected week from localStorage or default to 1
+  // --- Preserve last selected week using localStorage ---
   const [selectedWeek, setSelectedWeek] = useState(() => {
     const storedWeek = localStorage.getItem('selectedWeek');
     return storedWeek ? Number(storedWeek) : 1;
   });
+
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [results, setResults] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -99,12 +100,10 @@ function App() {
       const data = await response.json();
       setSchedule(data || []);
 
-      // Ensure selectedWeek is valid
-      const weekExists = data.some(w => w.week === selectedWeek);
-      if (!weekExists) {
-        const lastWeek = data[data.length - 1]?.week || 1;
-        setSelectedWeek(lastWeek);
-        localStorage.setItem('selectedWeek', lastWeek);
+      // --- Only reset selectedWeek if the stored week does not exist in schedule ---
+      if (!data.find(w => w.week === selectedWeek)) {
+        setSelectedWeek(data[0]?.week || 1);
+        localStorage.setItem('selectedWeek', data[0]?.week || 1);
       }
     } catch (error) {
       console.error('Error loading schedule:', error);
@@ -140,6 +139,24 @@ function App() {
       await setDoc(doc(db, 'users', username), { pin, picks: updatedPicks }, { merge: true });
     } catch (error) {
       console.error('Error saving pick:', error);
+    }
+  };
+
+  // --- Updated handleWeekChange to store selected week ---
+  const handleWeekChange = (e) => {
+    const newWeek = Number(e.target.value);
+    setSelectedWeek(newWeek);
+    localStorage.setItem('selectedWeek', newWeek);
+  };
+
+  const handleManualUpdate = async () => {
+    try {
+      await fetch('/api/update-all', { method: 'POST' });
+      fetchSchedule();
+      fetchResults();
+      alert('Schedule and results updated');
+    } catch (error) {
+      console.error('Manual update failed:', error);
     }
   };
   const handleWeekChange = (e) => {
