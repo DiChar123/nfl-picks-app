@@ -79,33 +79,44 @@ async function fetchResultsAndSchedule() {
       }),
     };
 
-    // Update results.json
+    // --- Read existing JSON
     let resultsData = fs.existsSync(resultsFilePath)
       ? JSON.parse(fs.readFileSync(resultsFilePath, 'utf-8'))
       : [];
-    const resIndex = resultsData.findIndex((w) => w.week === weekNumber);
-    if (resIndex !== -1) resultsData[resIndex] = updatedResults;
-    else resultsData.push(updatedResults);
-    fs.writeFileSync(resultsFilePath, JSON.stringify(resultsData, null, 2));
-
-    // Update schedule.json
     let scheduleData = fs.existsSync(scheduleFilePath)
       ? JSON.parse(fs.readFileSync(scheduleFilePath, 'utf-8'))
       : [];
+
+    // --- Update current week
+    const resIndex = resultsData.findIndex((w) => w.week === weekNumber);
+    if (resIndex !== -1) resultsData[resIndex] = updatedResults;
+    else resultsData.push(updatedResults);
+
     const schedIndex = scheduleData.findIndex((w) => w.week === weekNumber);
     if (schedIndex !== -1) scheduleData[schedIndex] = updatedSchedule;
     else scheduleData.push(updatedSchedule);
+
+    // --- Ensure all weeks 1–18 exist
+    for (let wk = 1; wk <= 18; wk++) {
+      if (!resultsData.find(w => w.week === wk)) {
+        resultsData.push({ week: wk, results: [] });
+      }
+      if (!scheduleData.find(w => w.week === wk)) {
+        scheduleData.push({ week: wk, bye: [], games: [] });
+      }
+    }
+
+    // --- Write JSON back to public
+    fs.writeFileSync(resultsFilePath, JSON.stringify(resultsData, null, 2));
     fs.writeFileSync(scheduleFilePath, JSON.stringify(scheduleData, null, 2));
 
-    // Firestore Sync
+    // --- Firestore Sync
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
     logMessage(`✅ Updated results & schedule for Week ${weekNumber} (${games.length} games)`);
 
-    // -----------------------------------------------
-    // Update Leaderboard in Firestore
-    // -----------------------------------------------
+    // --- Update Leaderboard in Firestore
     const usersSnapshot = await db.collection('users').get();
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
