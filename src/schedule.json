@@ -1,0 +1,88 @@
+[
+  {
+    "week": 2,
+    "bye": [],
+    "games": [
+      {
+        "homeTeam": "Green Bay Packers",
+        "awayTeam": "Washington Commanders",
+        "date": "2025-09-12T00:15Z"
+      },
+      {
+        "homeTeam": "Cincinnati Bengals",
+        "awayTeam": "Jacksonville Jaguars",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "Dallas Cowboys",
+        "awayTeam": "New York Giants",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "Detroit Lions",
+        "awayTeam": "Chicago Bears",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "Tennessee Titans",
+        "awayTeam": "Los Angeles Rams",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "Miami Dolphins",
+        "awayTeam": "New England Patriots",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "New Orleans Saints",
+        "awayTeam": "San Francisco 49ers",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "New York Jets",
+        "awayTeam": "Buffalo Bills",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "Pittsburgh Steelers",
+        "awayTeam": "Seattle Seahawks",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "Baltimore Ravens",
+        "awayTeam": "Cleveland Browns",
+        "date": "2025-09-14T17:00Z"
+      },
+      {
+        "homeTeam": "Indianapolis Colts",
+        "awayTeam": "Denver Broncos",
+        "date": "2025-09-14T20:05Z"
+      },
+      {
+        "homeTeam": "Arizona Cardinals",
+        "awayTeam": "Carolina Panthers",
+        "date": "2025-09-14T20:05Z"
+      },
+      {
+        "homeTeam": "Kansas City Chiefs",
+        "awayTeam": "Philadelphia Eagles",
+        "date": "2025-09-14T20:25Z"
+      },
+      {
+        "homeTeam": "Minnesota Vikings",
+        "awayTeam": "Atlanta Falcons",
+        "date": "2025-09-15T00:20Z"
+      },
+      {
+        "homeTeam": "Houston Texans",
+        "awayTeam": "Tampa Bay Buccaneers",
+        "date": "2025-09-15T23:00Z"
+      },
+      {
+        "homeTeam": "Las Vegas Raiders",
+        "awayTeam": "Los Angeles Chargers",
+        "date": "2025-09-16T02:00Z"
+      }
+    ]
+  }
+]

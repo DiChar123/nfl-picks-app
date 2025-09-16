@@ -4,9 +4,9 @@ const axios = require('axios');
 const admin = require('firebase-admin');
 
 // Paths
-const serviceAccount = require('./firebase-service-account.json');
-const resultsFilePath = path.join(__dirname, 'results.json');
-const scheduleFilePath = path.join(__dirname, 'schedule.json');
+const serviceAccount = require("./serviceAccountKey.json");
+const resultsFilePath = path.join(__dirname, '../public/results.json');
+const scheduleFilePath = path.join(__dirname, '../public/schedule.json');
 const logFilePath = path.join(__dirname, 'log.txt');
 
 // Firebase Init
@@ -74,7 +74,7 @@ async function fetchResultsAndSchedule() {
         return {
           homeTeam: homeTeam.team.displayName,
           awayTeam: awayTeam.team.displayName,
-          date: game.date, // Always ISO datetime string
+          date: game.date,
         };
       }),
     };
@@ -102,6 +102,39 @@ async function fetchResultsAndSchedule() {
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
     logMessage(`✅ Updated results & schedule for Week ${weekNumber} (${games.length} games)`);
+
+    // -----------------------------------------------
+    // Update Leaderboard in Firestore
+    // -----------------------------------------------
+    const usersSnapshot = await db.collection('users').get();
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data();
+      const picks = userData.picks || {};
+      let totalCorrect = 0;
+      const weeklyRecords = {};
+
+      for (const [weekStr, weekPicks] of Object.entries(picks)) {
+        const weekNum = Number(weekStr);
+        const weekResults = resultsData.find(w => w.week === weekNum);
+        if (!weekResults) continue;
+
+        let correctCount = 0;
+        weekResults.results.forEach((game, idx) => {
+          if (weekPicks[idx] && weekPicks[idx] === game.winner) correctCount++;
+        });
+
+        weeklyRecords[weekNum] = correctCount;
+        totalCorrect += correctCount;
+      }
+
+      await db.collection('users').doc(userDoc.id).set({
+        ...userData,
+        totalCorrect,
+        weeklyRecords
+      }, { merge: true });
+    }
+
+    logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
 
   } catch (err) {
     logMessage(`❌ ERROR: ${err.message}`);
