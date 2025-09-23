@@ -117,9 +117,11 @@ async function fetchResultsAndSchedule() {
     resultsData.sort((a, b) => a.week - b.week);
     scheduleData.sort((a, b) => a.week - b.week);
 
-    // --- Write JSON back to public
-    fs.writeFileSync(resultsFilePath, JSON.stringify(resultsData, null, 2));
-    fs.writeFileSync(scheduleFilePath, JSON.stringify(scheduleData, null, 2));
+    // --- Write JSON back to public (safe for local dev only)
+    if (process.env.NODE_ENV !== "production") {
+      fs.writeFileSync(resultsFilePath, JSON.stringify(resultsData, null, 2));
+      fs.writeFileSync(scheduleFilePath, JSON.stringify(scheduleData, null, 2));
+    }
 
     // --- Firestore Sync (only update current week)
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
