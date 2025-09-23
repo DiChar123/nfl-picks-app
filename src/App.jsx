@@ -149,15 +149,27 @@ function App() {
   };
 
   const handleManualUpdate = async () => {
-    try {
-      await fetch('/api/update-all', { method: 'POST' });
-      fetchSchedule();
-      fetchResults();
-      alert('Schedule and results updated');
-    } catch (error) {
-      console.error('Manual update failed:', error);
+  try {
+    const response = await fetch('/api/updateAll', { method: 'POST' });
+    const data = await response.json();
+
+    if (response.ok) {
+      // Optional console log
+      console.log(`Manual update: ${data.message || 'Success'}`);
+      // Reload schedule and results
+      await fetchSchedule();
+      await fetchResults();
+      alert('✅ Schedule, results, and leaderboard updated!');
+    } else {
+      console.error('Manual update failed:', data.error);
+      alert('❌ Manual update failed. Check console for details.');
     }
-  };
+  } catch (error) {
+    console.error('Manual update error:', error);
+    alert('❌ Manual update error. Check console for details.');
+  }
+};
+
 
   const selectedSchedule = schedule.find((week) => week.week === selectedWeek);
 
