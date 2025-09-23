@@ -176,84 +176,84 @@
     "bye": [],
     "games": [
       {
-        "homeTeam": "BUF",
-        "awayTeam": "MIA",
-        "date": "2025-09-19T00:15:00Z"
+        "homeTeam": "Buffalo Bills",
+        "awayTeam": "Miami Dolphins",
+        "date": "2025-09-19T00:15Z"
       },
       {
-        "homeTeam": "CLE",
-        "awayTeam": "GB",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "Cleveland Browns",
+        "awayTeam": "Green Bay Packers",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "TEN",
-        "awayTeam": "IND",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "Tennessee Titans",
+        "awayTeam": "Indianapolis Colts",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "MIN",
-        "awayTeam": "CIN",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "Minnesota Vikings",
+        "awayTeam": "Cincinnati Bengals",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "NE",
-        "awayTeam": "PIT",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "New England Patriots",
+        "awayTeam": "Pittsburgh Steelers",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "PHI",
-        "awayTeam": "LAR",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "Philadelphia Eagles",
+        "awayTeam": "Los Angeles Rams",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "TB",
-        "awayTeam": "NYJ",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "Tampa Bay Buccaneers",
+        "awayTeam": "New York Jets",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "WAS",
-        "awayTeam": "LV",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "Washington Commanders",
+        "awayTeam": "Las Vegas Raiders",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "CAR",
-        "awayTeam": "ATL",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "Carolina Panthers",
+        "awayTeam": "Atlanta Falcons",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "JAX",
-        "awayTeam": "HOU",
-        "date": "2025-09-21T17:00:00Z"
+        "homeTeam": "Jacksonville Jaguars",
+        "awayTeam": "Houston Texans",
+        "date": "2025-09-21T17:00Z"
       },
       {
-        "homeTeam": "LAC",
-        "awayTeam": "DEN",
-        "date": "2025-09-21T20:05:00Z"
+        "homeTeam": "Los Angeles Chargers",
+        "awayTeam": "Denver Broncos",
+        "date": "2025-09-21T20:05Z"
       },
       {
-        "homeTeam": "SEA",
-        "awayTeam": "NO",
-        "date": "2025-09-21T20:05:00Z"
+        "homeTeam": "Seattle Seahawks",
+        "awayTeam": "New Orleans Saints",
+        "date": "2025-09-21T20:05Z"
       },
       {
-        "homeTeam": "CHI",
-        "awayTeam": "DAL",
-        "date": "2025-09-21T20:25:00Z"
+        "homeTeam": "Chicago Bears",
+        "awayTeam": "Dallas Cowboys",
+        "date": "2025-09-21T20:25Z"
       },
       {
-        "homeTeam": "SF",
-        "awayTeam": "ARI",
-        "date": "2025-09-21T20:25:00Z"
+        "homeTeam": "San Francisco 49ers",
+        "awayTeam": "Arizona Cardinals",
+        "date": "2025-09-21T20:25Z"
       },
       {
-        "homeTeam": "NYG",
-        "awayTeam": "KC",
-        "date": "2025-09-22T00:20:00Z"
+        "homeTeam": "New York Giants",
+        "awayTeam": "Kansas City Chiefs",
+        "date": "2025-09-22T00:20Z"
       },
       {
-        "homeTeam": "BAL",
-        "awayTeam": "DET",
-        "date": "2025-09-23T00:15:00Z"
+        "homeTeam": "Baltimore Ravens",
+        "awayTeam": "Detroit Lions",
+        "date": "2025-09-23T00:15Z"
       }
     ]
   },
