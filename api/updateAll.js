@@ -8,10 +8,13 @@ import fs from 'fs';
 let serviceAccount;
 
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  // Parse and replace literal \n with actual newlines
-  const envKey = process.env.FIREBASE_SERVICE_ACCOUNT;
-  serviceAccount = JSON.parse(envKey);
-  serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+  // Use environment variable on Vercel
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+  // FIX: convert escaped \n to real newlines
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+  }
 } else {
   // Local fallback: read from serviceAccountKey.json
   const localPath = path.resolve('./src/serviceAccountKey.json');
@@ -32,20 +35,28 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// ...rest of your handler code remains unchanged
+// Helper to log messages
+function logMessage(message) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${message}`);
+}
+
 export default async function handler(req, res) {
   try {
-    // Your existing update logic here
+    // Fetch ESPN API data
     const response = await axios.get(
       'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
     );
     const games = response.data.events || [];
     const weekNumber = response.data.week?.number || 1;
 
-    // schedule and results code as before
+    // Build updated schedule
     const updatedSchedule = {
       week: weekNumber,
-      bye: response.data.leagues?.[0]?.byeWeekTeams?.map((team) => team.displayName) || [],
+      bye:
+        response.data.leagues?.[0]?.byeWeekTeams?.map(
+          (team) => team.displayName
+        ) || [],
       games: games.map((game) => {
         const competitors = game.competitions[0].competitors;
         const homeTeam = competitors.find((t) => t.homeAway === 'home');
@@ -58,12 +69,14 @@ export default async function handler(req, res) {
       }),
     };
 
+    // Build updated results
     const updatedResults = {
       week: weekNumber,
       results: games.map((game) => {
         const competitors = game.competitions[0].competitors;
         const homeTeam = competitors.find((t) => t.homeAway === 'home');
         const awayTeam = competitors.find((t) => t.homeAway === 'away');
+
         const homeScore = parseInt(homeTeam.score);
         const awayScore = parseInt(awayTeam.score);
         const winner =
@@ -72,6 +85,7 @@ export default async function handler(req, res) {
               ? homeTeam.team.displayName
               : awayTeam.team.displayName
             : '';
+
         return {
           homeTeam: homeTeam.team.displayName,
           awayTeam: awayTeam.team.displayName,
@@ -82,10 +96,15 @@ export default async function handler(req, res) {
       }),
     };
 
+    // Update Firestore: schedule and results
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
-    // leaderboard update code as before
+    logMessage(
+      `✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`
+    );
+
+    // Update leaderboard
     const usersSnapshot = await db.collection('users').get();
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
@@ -98,7 +117,10 @@ export default async function handler(req, res) {
         const weekResults =
           weekNum === weekNumber
             ? updatedResults
-            : (await db.collection('results').doc(`week${weekNum}`).get()).data();
+            : (await db
+                .collection('results')
+                .doc(`week${weekNum}`)
+                .get()).data();
         if (!weekResults) continue;
 
         let correctCount = 0;
@@ -110,21 +132,26 @@ export default async function handler(req, res) {
         totalCorrect += correctCount;
       }
 
-      await db.collection('users').doc(userDoc.id).set(
-        {
-          ...userData,
-          totalCorrect,
-          weeklyRecords,
-        },
-        { merge: true }
-      );
+      await db
+        .collection('users')
+        .doc(userDoc.id)
+        .set(
+          {
+            ...userData,
+            totalCorrect,
+            weeklyRecords,
+          },
+          { merge: true }
+        );
     }
+
+    logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
 
     res
       .status(200)
       .json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
   } catch (err) {
-    console.error('Manual update error:', err);
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 }
