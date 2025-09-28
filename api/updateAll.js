@@ -2,23 +2,41 @@
 import admin from 'firebase-admin';
 import axios from 'axios';
 
-// ✅ Initialize Firebase Admin once
+// Initialize Firebase Admin
+let serviceAccount;
+
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } catch (e) {
+    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT:", e.message);
+    throw new Error(
+      "FIREBASE_SERVICE_ACCOUNT env variable is set but contains invalid JSON"
+    );
+  }
+} else {
+  throw new Error(
+    "No Firebase service account found. Set FIREBASE_SERVICE_ACCOUNT environment variable."
+  );
+}
+
 if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
 }
+
 const db = admin.firestore();
 
-// ✅ Main API handler
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed. Use POST.' });
-  }
+// Helper to log messages
+function logMessage(message) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${message}`);
+}
 
+export default async function handler(req, res) {
   try {
-    // Fetch live NFL data from ESPN
+    // Fetch ESPN API data
     const response = await axios.get(
       'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
     );
@@ -71,11 +89,15 @@ export default async function handler(req, res) {
       }),
     };
 
-    // ✅ Update Firestore (schedule + results)
+    // Update Firestore: schedule and results
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
-    // ✅ Update leaderboard
+    logMessage(
+      `✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`
+    );
+
+    // Update leaderboard
     const usersSnapshot = await db.collection('users').get();
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
@@ -88,9 +110,10 @@ export default async function handler(req, res) {
         const weekResults =
           weekNum === weekNumber
             ? updatedResults
-            : (
-                await db.collection('results').doc(`week${weekNum}`).get()
-              ).data();
+            : (await db
+                .collection('results')
+                .doc(`week${weekNum}`)
+                .get()).data();
         if (!weekResults) continue;
 
         let correctCount = 0;
@@ -102,21 +125,26 @@ export default async function handler(req, res) {
         totalCorrect += correctCount;
       }
 
-      await db.collection('users').doc(userDoc.id).set(
-        {
-          ...userData,
-          totalCorrect,
-          weeklyRecords,
-        },
-        { merge: true }
-      );
+      await db
+        .collection('users')
+        .doc(userDoc.id)
+        .set(
+          {
+            ...userData,
+            totalCorrect,
+            weeklyRecords,
+          },
+          { merge: true }
+        );
     }
 
-    return res
+    logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
+
+    res
       .status(200)
-      .json({ message: `✅ Week ${weekNumber} updated successfully` });
+      .json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
   } catch (err) {
-    console.error('UpdateAll API error:', err);
-    return res.status(500).json({ error: err.message });
+    console.error("Manual update error:", err);
+    res.status(500).json({ error: err.message });
   }
 }
