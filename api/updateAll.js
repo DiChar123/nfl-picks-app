@@ -3,12 +3,12 @@ import admin from 'firebase-admin';
 import axios from 'axios';
 import path from 'path';
 import fs from 'fs';
+import { DateTime } from 'luxon'; // <- added for timezone handling
 
 // Initialize Firebase Admin
 let serviceAccount;
 
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  // Use environment variable on Vercel
   try {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
@@ -22,7 +22,6 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     );
   }
 } else {
-  // Local fallback: read from serviceAccountKey.json
   const localPath = path.resolve('./src/serviceAccountKey.json');
   if (fs.existsSync(localPath)) {
     serviceAccount = JSON.parse(fs.readFileSync(localPath, 'utf8'));
@@ -68,18 +67,18 @@ export default async function handler(req, res) {
         const homeTeam = competitors.find((t) => t.homeAway === 'home');
         const awayTeam = competitors.find((t) => t.homeAway === 'away');
 
-        const utcDate = game.date || game.competitions[0]?.startDate || null;
-        let centralDateStr = null;
-        if (utcDate) {
-          const localDate = new Date(utcDate);
-          centralDateStr = localDate.toLocaleString('en-US', { timeZone: 'America/Chicago' });
-        }
+        // Convert UTC to Eastern Time
+        const gameDateUTC = game.date || game.competitions[0]?.startDate || null;
+        const gameDateET = gameDateUTC
+          ? DateTime.fromISO(gameDateUTC, { zone: 'utc' })
+              .setZone('America/New_York')
+              .toISO()
+          : null;
 
         return {
           homeTeam: homeTeam.team.displayName,
           awayTeam: awayTeam.team.displayName,
-          dateUTC: utcDate,          // keep original UTC for calculations
-          date: centralDateStr,      // Central Time for display
+          date: gameDateET,
         };
       }),
     };
