@@ -3,7 +3,7 @@ import admin from 'firebase-admin';
 import axios from 'axios';
 import path from 'path';
 import fs from 'fs';
-import { DateTime } from 'luxon'; // <- added for timezone handling
+import { DateTime } from 'luxon'; // <- Added Luxon import
 
 // Initialize Firebase Admin
 let serviceAccount;
@@ -12,7 +12,6 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   try {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-    // FIX: convert escaped \n to real newlines
     if (serviceAccount.private_key) {
       serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
     }
@@ -40,7 +39,6 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Helper to log messages
 function logMessage(message) {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] ${message}`);
@@ -55,7 +53,7 @@ export default async function handler(req, res) {
     const games = response.data.events || [];
     const weekNumber = response.data.week?.number || 1;
 
-    // Build updated schedule
+    // Build updated schedule with corrected Eastern Time dates
     const updatedSchedule = {
       week: weekNumber,
       bye:
@@ -67,18 +65,16 @@ export default async function handler(req, res) {
         const homeTeam = competitors.find((t) => t.homeAway === 'home');
         const awayTeam = competitors.find((t) => t.homeAway === 'away');
 
-        // Convert UTC to Eastern Time
-        const gameDateUTC = game.date || game.competitions[0]?.startDate || null;
-        const gameDateET = gameDateUTC
-          ? DateTime.fromISO(gameDateUTC, { zone: 'utc' })
-              .setZone('America/New_York')
-              .toISO()
+        // Correct date to Eastern Time
+        const rawDate = game.date || game.competitions[0]?.startDate;
+        const localDate = rawDate
+          ? DateTime.fromISO(rawDate, { zone: 'utc' }).setZone('America/New_York').toISO()
           : null;
 
         return {
           homeTeam: homeTeam.team.displayName,
           awayTeam: awayTeam.team.displayName,
-          date: gameDateET,
+          date: localDate,
         };
       }),
     };
@@ -110,7 +106,7 @@ export default async function handler(req, res) {
       }),
     };
 
-    // Update Firestore: schedule and results
+    // Update Firestore
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
