@@ -67,11 +67,19 @@ export default async function handler(req, res) {
         const competitors = game.competitions[0].competitors;
         const homeTeam = competitors.find((t) => t.homeAway === 'home');
         const awayTeam = competitors.find((t) => t.homeAway === 'away');
+
+        const utcDate = game.date || game.competitions[0]?.startDate || null;
+        let centralDateStr = null;
+        if (utcDate) {
+          const localDate = new Date(utcDate);
+          centralDateStr = localDate.toLocaleString('en-US', { timeZone: 'America/Chicago' });
+        }
+
         return {
           homeTeam: homeTeam.team.displayName,
           awayTeam: awayTeam.team.displayName,
-          // ESPN sometimes uses competitions[0].startDate instead of event.date
-          date: game.date || game.competitions[0]?.startDate || null,
+          dateUTC: utcDate,          // keep original UTC for calculations
+          date: centralDateStr,      // Central Time for display
         };
       }),
     };
