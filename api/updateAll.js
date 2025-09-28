@@ -2,23 +2,14 @@
 import admin from 'firebase-admin';
 import axios from 'axios';
 
-// Initialize Firebase Admin
-let serviceAccount;
-
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  } catch (e) {
-    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT:", e.message);
-    throw new Error(
-      "FIREBASE_SERVICE_ACCOUNT env variable is set but contains invalid JSON"
-    );
-  }
-} else {
+// Initialize Firebase Admin using only the environment variable
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
   throw new Error(
-    "No Firebase service account found. Set FIREBASE_SERVICE_ACCOUNT environment variable."
+    'FIREBASE_SERVICE_ACCOUNT env variable is not set on Vercel.'
   );
 }
+
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -28,7 +19,6 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Helper to log messages
 function logMessage(message) {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] ${message}`);
@@ -89,13 +79,11 @@ export default async function handler(req, res) {
       }),
     };
 
-    // Update Firestore: schedule and results
+    // Update Firestore
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
-    logMessage(
-      `✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`
-    );
+    logMessage(`✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`);
 
     // Update leaderboard
     const usersSnapshot = await db.collection('users').get();
@@ -110,10 +98,7 @@ export default async function handler(req, res) {
         const weekResults =
           weekNum === weekNumber
             ? updatedResults
-            : (await db
-                .collection('results')
-                .doc(`week${weekNum}`)
-                .get()).data();
+            : (await db.collection('results').doc(`week${weekNum}`).get()).data();
         if (!weekResults) continue;
 
         let correctCount = 0;
@@ -129,22 +114,16 @@ export default async function handler(req, res) {
         .collection('users')
         .doc(userDoc.id)
         .set(
-          {
-            ...userData,
-            totalCorrect,
-            weeklyRecords,
-          },
+          { ...userData, totalCorrect, weeklyRecords },
           { merge: true }
         );
     }
 
     logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
 
-    res
-      .status(200)
-      .json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
+    res.status(200).json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
   } catch (err) {
-    console.error("Manual update error:", err);
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 }
