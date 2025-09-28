@@ -9,11 +9,17 @@ let serviceAccount;
 
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   // Use environment variable on Vercel
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-  // FIX: convert escaped \n to real newlines
-  if (serviceAccount.private_key) {
-    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    // FIX: convert escaped \n to real newlines
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+  } catch (e) {
+    throw new Error(
+      'Failed to parse FIREBASE_SERVICE_ACCOUNT env var. Double-check it is valid JSON with \\n for newlines.'
+    );
   }
 } else {
   // Local fallback: read from serviceAccountKey.json
@@ -64,7 +70,8 @@ export default async function handler(req, res) {
         return {
           homeTeam: homeTeam.team.displayName,
           awayTeam: awayTeam.team.displayName,
-          date: game.date,
+          // ESPN sometimes uses competitions[0].startDate instead of event.date
+          date: game.date || game.competitions[0]?.startDate || null,
         };
       }),
     };
@@ -151,7 +158,7 @@ export default async function handler(req, res) {
       .status(200)
       .json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
   } catch (err) {
-    console.error(err);
+    console.error("UpdateAll error:", err);
     res.status(500).json({ error: err.message });
   }
 }
