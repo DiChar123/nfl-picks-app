@@ -97,15 +97,12 @@ function App() {
       const response = await fetch('/schedule.json');
       const data = await response.json();
 
+      // <-- Store raw ESPN ISO dates (UTC). Do NOT convert here.
       const formattedData = data.map(week => ({
         ...week,
         games: (week.games || []).map(game => ({
           ...game,
-          date: game.date
-            ? DateTime.fromISO(game.date, { zone: 'utc' })
-                .setZone('America/New_York')
-                .toISO()
-            : null
+          date: game.date || null
         }))
       }));
 
@@ -182,20 +179,25 @@ function App() {
 
   const selectedSchedule = schedule.find((week) => week.week === selectedWeek);
 
-  // ✅ Updated formatters (no double ET conversion)
+  // <-- Formatters: parse as UTC, then convert to ET for display
   const formatReadableDate = (isoDate) => {
     if (!isoDate) return 'TBD';
-    return DateTime.fromISO(isoDate).toFormat('EEEE, LLL dd');
+    return DateTime.fromISO(isoDate, { zone: 'utc' })
+      .setZone('America/New_York')
+      .toFormat('EEEE, LLL dd');
   };
 
   const formatReadableTime = (isoDate) => {
     if (!isoDate) return 'TBD';
-    return DateTime.fromISO(isoDate).toFormat('hh:mm a') + ' ET';
+    return DateTime.fromISO(isoDate, { zone: 'utc' })
+      .setZone('America/New_York')
+      .toFormat('hh:mm a') + ' ET';
   };
 
   const isPickLocked = (isoDate) => {
     if (!isoDate) return false;
-    const gameTime = DateTime.fromISO(isoDate).toMillis();
+    // compute epoch ms from the UTC iso (absolute time)
+    const gameTime = DateTime.fromISO(isoDate, { zone: 'utc' }).toMillis();
     return Date.now() >= gameTime - 5 * 60000;
   };
   return (
