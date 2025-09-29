@@ -11,7 +11,6 @@ let serviceAccount;
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   try {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
     if (serviceAccount.private_key) {
       serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
     }
@@ -39,36 +38,49 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+// Helper to log messages
 function logMessage(message) {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] ${message}`);
 }
 
+// Convert ESPN UTC date string to ET ISO string
+function convertToET(utcString) {
+  if (!utcString) return null;
+  return DateTime.fromISO(utcString, { zone: 'utc' })
+    .setZone('America/New_York')
+    .toISO();
+}
+
 export default async function handler(req, res) {
   try {
+    // Fetch ESPN API data
     const response = await axios.get(
       'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
     );
     const games = response.data.events || [];
     const weekNumber = response.data.week?.number || 1;
 
-    // Build updated schedule (store dates in UTC)
+    // Build updated schedule
     const updatedSchedule = {
       week: weekNumber,
       bye:
-        response.data.leagues?.[0]?.byeWeekTeams?.map((team) => team.displayName) || [],
+        response.data.leagues?.[0]?.byeWeekTeams?.map(
+          (team) => team.displayName
+        ) || [],
       games: games.map((game) => {
         const competitors = game.competitions[0].competitors;
         const homeTeam = competitors.find((t) => t.homeAway === 'home');
         const awayTeam = competitors.find((t) => t.homeAway === 'away');
 
-        // Use ESPN date if available, fallback to competition startDate
-        const rawDate = game.date || game.competitions[0]?.startDate || null;
+        // Convert date to ET
+        const gameDateUTC = game.date || game.competitions[0]?.startDate || null;
+        const gameDateET = convertToET(gameDateUTC);
 
         return {
           homeTeam: homeTeam.team.displayName,
           awayTeam: awayTeam.team.displayName,
-          date: rawDate, // store as-is in UTC
+          date: gameDateET,
         };
       }),
     };
@@ -100,11 +112,13 @@ export default async function handler(req, res) {
       }),
     };
 
-    // Update Firestore
+    // Update Firestore: schedule and results
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
-    logMessage(`✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`);
+    logMessage(
+      `✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`
+    );
 
     // Update leaderboard
     const usersSnapshot = await db.collection('users').get();
@@ -119,7 +133,10 @@ export default async function handler(req, res) {
         const weekResults =
           weekNum === weekNumber
             ? updatedResults
-            : (await db.collection('results').doc(`week${weekNum}`).get()).data();
+            : (await db
+                .collection('results')
+                .doc(`week${weekNum}`)
+                .get()).data();
         if (!weekResults) continue;
 
         let correctCount = 0;
@@ -134,7 +151,14 @@ export default async function handler(req, res) {
       await db
         .collection('users')
         .doc(userDoc.id)
-        .set({ ...userData, totalCorrect, weeklyRecords }, { merge: true });
+        .set(
+          {
+            ...userData,
+            totalCorrect,
+            weeklyRecords,
+          },
+          { merge: true }
+        );
     }
 
     logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
@@ -143,7 +167,7 @@ export default async function handler(req, res) {
       .status(200)
       .json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
   } catch (err) {
-    console.error('UpdateAll error:', err);
+    console.error("UpdateAll error:", err);
     res.status(500).json({ error: err.message });
   }
 }
