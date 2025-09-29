@@ -3,7 +3,7 @@ import admin from 'firebase-admin';
 import axios from 'axios';
 import path from 'path';
 import fs from 'fs';
-import { DateTime } from 'luxon'; // <- Added Luxon import
+import { DateTime } from 'luxon';
 
 // Initialize Firebase Admin
 let serviceAccount;
@@ -46,35 +46,29 @@ function logMessage(message) {
 
 export default async function handler(req, res) {
   try {
-    // Fetch ESPN API data
     const response = await axios.get(
       'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
     );
     const games = response.data.events || [];
     const weekNumber = response.data.week?.number || 1;
 
-    // Build updated schedule with corrected Eastern Time dates
+    // Build updated schedule (store dates in UTC)
     const updatedSchedule = {
       week: weekNumber,
       bye:
-        response.data.leagues?.[0]?.byeWeekTeams?.map(
-          (team) => team.displayName
-        ) || [],
+        response.data.leagues?.[0]?.byeWeekTeams?.map((team) => team.displayName) || [],
       games: games.map((game) => {
         const competitors = game.competitions[0].competitors;
         const homeTeam = competitors.find((t) => t.homeAway === 'home');
         const awayTeam = competitors.find((t) => t.homeAway === 'away');
 
-        // Correct date to Eastern Time
-        const rawDate = game.date || game.competitions[0]?.startDate;
-        const localDate = rawDate
-          ? DateTime.fromISO(rawDate, { zone: 'utc' }).setZone('America/New_York').toISO()
-          : null;
+        // Use ESPN date if available, fallback to competition startDate
+        const rawDate = game.date || game.competitions[0]?.startDate || null;
 
         return {
           homeTeam: homeTeam.team.displayName,
           awayTeam: awayTeam.team.displayName,
-          date: localDate,
+          date: rawDate, // store as-is in UTC
         };
       }),
     };
@@ -110,9 +104,7 @@ export default async function handler(req, res) {
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
-    logMessage(
-      `✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`
-    );
+    logMessage(`✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`);
 
     // Update leaderboard
     const usersSnapshot = await db.collection('users').get();
@@ -127,10 +119,7 @@ export default async function handler(req, res) {
         const weekResults =
           weekNum === weekNumber
             ? updatedResults
-            : (await db
-                .collection('results')
-                .doc(`week${weekNum}`)
-                .get()).data();
+            : (await db.collection('results').doc(`week${weekNum}`).get()).data();
         if (!weekResults) continue;
 
         let correctCount = 0;
@@ -145,14 +134,7 @@ export default async function handler(req, res) {
       await db
         .collection('users')
         .doc(userDoc.id)
-        .set(
-          {
-            ...userData,
-            totalCorrect,
-            weeklyRecords,
-          },
-          { merge: true }
-        );
+        .set({ ...userData, totalCorrect, weeklyRecords }, { merge: true });
     }
 
     logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
@@ -161,7 +143,7 @@ export default async function handler(req, res) {
       .status(200)
       .json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
   } catch (err) {
-    console.error("UpdateAll error:", err);
+    console.error('UpdateAll error:', err);
     res.status(500).json({ error: err.message });
   }
 }
