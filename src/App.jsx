@@ -73,7 +73,6 @@ function App() {
       loadPicks(storedUsername, storedPin);
     }
   }, []);
-
   const loadPicks = async (uname, upin) => {
     try {
       const docRef = doc(db, 'users', uname);
@@ -138,6 +137,7 @@ function App() {
       setResults([]);
     }
   };
+
   const handlePick = async (week, gameIndex, team) => {
     const updatedPicks = { ...userPicks };
     const weekPicks = updatedPicks[week] ? { ...updatedPicks[week] } : {};
@@ -182,25 +182,20 @@ function App() {
 
   const selectedSchedule = schedule.find((week) => week.week === selectedWeek);
 
+  // ✅ Updated formatters (no double ET conversion)
   const formatReadableDate = (isoDate) => {
     if (!isoDate) return 'TBD';
-    return DateTime.fromISO(isoDate, { zone: 'utc' })
-      .setZone('America/New_York')
-      .toFormat('EEEE, LLL dd');
+    return DateTime.fromISO(isoDate).toFormat('EEEE, LLL dd');
   };
 
   const formatReadableTime = (isoDate) => {
     if (!isoDate) return 'TBD';
-    return DateTime.fromISO(isoDate, { zone: 'utc' })
-      .setZone('America/New_York')
-      .toFormat('hh:mm a') + ' ET';
+    return DateTime.fromISO(isoDate).toFormat('hh:mm a') + ' ET';
   };
 
   const isPickLocked = (isoDate) => {
     if (!isoDate) return false;
-    const gameTime = DateTime.fromISO(isoDate, { zone: 'utc' })
-      .setZone('America/New_York')
-      .toMillis();
+    const gameTime = DateTime.fromISO(isoDate).toMillis();
     return Date.now() >= gameTime - 5 * 60000;
   };
   return (
