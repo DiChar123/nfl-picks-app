@@ -5,6 +5,7 @@ import teamLogos from './teamLogos';
 import Leaderboard from './Leaderboard';
 import db from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { DateTime } from 'luxon'; // <-- added Luxon
 
 function App() {
   const teamAbbrToFullName = {
@@ -92,16 +93,31 @@ function App() {
     fetchSchedule();
     fetchResults();
   }, []);
+
   const fetchSchedule = async () => {
     try {
       const response = await fetch('/schedule.json');
       const data = await response.json();
-      setSchedule(data || []);
+
+      // ✅ FIXED: Format dates using Luxon in Eastern Time
+      const formattedData = data.map(week => ({
+        ...week,
+        games: (week.games || []).map(game => ({
+          ...game,
+          date: game.date
+            ? DateTime.fromISO(game.date, { zone: 'utc' })
+                .setZone('America/New_York')
+                .toISO()
+            : null
+        }))
+      }));
+
+      setSchedule(formattedData || []);
 
       // Ensure selectedWeek is valid after loading schedule
-      const validWeek = data.find(w => w.week === selectedWeek);
+      const validWeek = formattedData.find(w => w.week === selectedWeek);
       if (!validWeek) {
-        const firstWeek = data[0]?.week || 1;
+        const firstWeek = formattedData[0]?.week || 1;
         setSelectedWeek(firstWeek);
         localStorage.setItem('selectedWeek', firstWeek);
       }
@@ -110,7 +126,6 @@ function App() {
       setSchedule([]);
     }
   };
-
   const fetchResults = async () => {
     try {
       const response = await fetch('/results.json');
@@ -149,45 +164,47 @@ function App() {
   };
 
   const handleManualUpdate = async () => {
-  try {
-    const response = await fetch('/api/updateAll', { method: 'POST' });
-    const data = await response.json();
+    try {
+      const response = await fetch('/api/updateAll', { method: 'POST' });
+      const data = await response.json();
 
-    if (response.ok) {
-      // Optional console log
-      console.log(`Manual update: ${data.message || 'Success'}`);
-      // Reload schedule and results
-      await fetchSchedule();
-      await fetchResults();
-      alert('✅ Schedule, results, and leaderboard updated!');
-    } else {
-      console.error('Manual update failed:', data.error);
-      alert('❌ Manual update failed. Check console for details.');
+      if (response.ok) {
+        console.log(`Manual update: ${data.message || 'Success'}`);
+        await fetchSchedule();
+        await fetchResults();
+        alert('✅ Schedule, results, and leaderboard updated!');
+      } else {
+        console.error('Manual update failed:', data.error);
+        alert('❌ Manual update failed. Check console for details.');
+      }
+    } catch (error) {
+      console.error('Manual update error:', error);
+      alert('❌ Manual update error. Check console for details.');
     }
-  } catch (error) {
-    console.error('Manual update error:', error);
-    alert('❌ Manual update error. Check console for details.');
-  }
-};
-
+  };
 
   const selectedSchedule = schedule.find((week) => week.week === selectedWeek);
 
+  // ✅ FIXED: Luxon-based date/time formatting
   const formatReadableDate = (isoDate) => {
     if (!isoDate) return 'TBD';
-    const dateObj = new Date(isoDate);
-    return dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    return DateTime.fromISO(isoDate, { zone: 'utc' })
+      .setZone('America/New_York')
+      .toFormat('EEEE, LLL dd');
   };
 
   const formatReadableTime = (isoDate) => {
     if (!isoDate) return 'TBD';
-    const dateObj = new Date(isoDate);
-    return dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) + ' ET';
+    return DateTime.fromISO(isoDate, { zone: 'utc' })
+      .setZone('America/New_York')
+      .toFormat('hh:mm a') + ' ET';
   };
 
   const isPickLocked = (isoDate) => {
     if (!isoDate) return false;
-    const gameTime = new Date(isoDate).getTime();
+    const gameTime = DateTime.fromISO(isoDate, { zone: 'utc' })
+      .setZone('America/New_York')
+      .toMillis();
     return Date.now() >= gameTime - 5 * 60000;
   };
   return (
