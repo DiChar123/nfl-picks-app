@@ -294,7 +294,7 @@ return (
           );
         })}
       </div>
-     ) : (
+    ) : (
       <p>Loading schedule...</p>
     )}
   </div>
