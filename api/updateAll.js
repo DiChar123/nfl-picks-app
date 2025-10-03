@@ -61,7 +61,7 @@ export default async function handler(req, res) {
     const games = response.data.events || [];
     const weekNumber = response.data.week?.number || 1;
 
-    // Build updated schedule
+    // Build updated schedule (all games)
     const updatedSchedule = {
       week: weekNumber,
       bye:
@@ -73,7 +73,6 @@ export default async function handler(req, res) {
         const homeTeam = competitors.find((t) => t.homeAway === 'home');
         const awayTeam = competitors.find((t) => t.homeAway === 'away');
 
-        // Convert date to ET
         const gameDateUTC = game.date || game.competitions[0]?.startDate || null;
         const gameDateET = convertToET(gameDateUTC);
 
@@ -85,39 +84,46 @@ export default async function handler(req, res) {
       }),
     };
 
-    // Build updated results
+    // Build updated results (only include played games)
     const updatedResults = {
       week: weekNumber,
-      results: games.map((game) => {
-        const competitors = game.competitions[0].competitors;
-        const homeTeam = competitors.find((t) => t.homeAway === 'home');
-        const awayTeam = competitors.find((t) => t.homeAway === 'away');
+      results: games
+        .map((game) => {
+          const competitors = game.competitions[0].competitors;
+          const homeTeam = competitors.find((t) => t.homeAway === 'home');
+          const awayTeam = competitors.find((t) => t.homeAway === 'away');
 
-        const homeScore = parseInt(homeTeam.score);
-        const awayScore = parseInt(awayTeam.score);
-        const winner =
-          !isNaN(homeScore) && !isNaN(awayScore)
-            ? homeScore > awayScore
-              ? homeTeam.team.displayName
-              : awayTeam.team.displayName
-            : ''; // Only set winner if scores exist
+          const homeScore = parseInt(homeTeam.score);
+          const awayScore = parseInt(awayTeam.score);
 
-        return {
-          homeTeam: homeTeam.team.displayName,
-          awayTeam: awayTeam.team.displayName,
-          homeScore,
-          awayScore,
-          winner,
-        };
-      }),
+          // Determine winner if game has been played
+          const winner =
+            !isNaN(homeScore) && !isNaN(awayScore)
+              ? homeScore > awayScore
+                ? homeTeam.team.displayName
+                : awayTeam.team.displayName
+              : "";
+
+          // Only include games that have been played
+          if (winner === "") return null;
+
+          return {
+            homeTeam: homeTeam.team.displayName,
+            awayTeam: awayTeam.team.displayName,
+            homeScore,
+            awayScore,
+            winner,
+          };
+        })
+        .filter(Boolean), // remove null entries
     };
 
-    // Update Firestore: schedule and results
+    // Update Firestore: schedule (all) and results (only played games)
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
     logMessage(
-      `✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`
+      `✅ Updated schedule & results for Week ${weekNumber} (${updatedResults.results.length} played games)`
     );
 
     // Update leaderboard
@@ -130,18 +136,22 @@ export default async function handler(req, res) {
 
       for (const [weekStr, weekPicks] of Object.entries(picks)) {
         const weekNum = Number(weekStr);
+
+        // Get results for this week
         const weekResults =
           weekNum === weekNumber
             ? updatedResults
-            : (await db.collection('results').doc(`week${weekNum}`).get()).data();
+            : (await db
+                .collection('results')
+                .doc(`week${weekNum}`)
+                .get()).data();
         if (!weekResults) continue;
 
+        // Count only games with winners
         let correctCount = 0;
-
-        // Only count picks if that game has a winner
         weekResults.results.forEach((game, idx) => {
-          if (weekPicks[idx] && game.winner) {
-            if (weekPicks[idx] === game.winner) correctCount++;
+          if (game.winner && weekPicks[idx] && weekPicks[idx] === game.winner) {
+            correctCount++;
           }
         });
 
