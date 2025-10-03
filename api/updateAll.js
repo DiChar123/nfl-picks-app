@@ -64,14 +64,11 @@ export default async function handler(req, res) {
     // Build updated schedule (all games)
     const updatedSchedule = {
       week: weekNumber,
-      bye:
-        response.data.leagues?.[0]?.byeWeekTeams?.map(
-          (team) => team.displayName
-        ) || [],
-      games: games.map((game) => {
+      bye: response.data.leagues?.[0]?.byeWeekTeams?.map(team => team.displayName) || [],
+      games: games.map(game => {
         const competitors = game.competitions[0].competitors;
-        const homeTeam = competitors.find((t) => t.homeAway === 'home');
-        const awayTeam = competitors.find((t) => t.homeAway === 'away');
+        const homeTeam = competitors.find(t => t.homeAway === 'home');
+        const awayTeam = competitors.find(t => t.homeAway === 'away');
 
         const gameDateUTC = game.date || game.competitions[0]?.startDate || null;
         const gameDateET = convertToET(gameDateUTC);
@@ -84,47 +81,48 @@ export default async function handler(req, res) {
       }),
     };
 
-    // Build updated results (only include played games)
+    // Get current Firestore results for the week (if any)
+    const weekResultsDoc = await db.collection('results').doc(`week${weekNumber}`).get();
+    const currentResults = weekResultsDoc.exists ? weekResultsDoc.data().results || [] : [];
+
+    // Build updated results (preserve manual edits)
     const updatedResults = {
       week: weekNumber,
-      results: games
-        .map((game) => {
-          const competitors = game.competitions[0].competitors;
-          const homeTeam = competitors.find((t) => t.homeAway === 'home');
-          const awayTeam = competitors.find((t) => t.homeAway === 'away');
+      results: games.map((game, idx) => {
+        const competitors = game.competitions[0].competitors;
+        const homeTeam = competitors.find(t => t.homeAway === 'home');
+        const awayTeam = competitors.find(t => t.homeAway === 'away');
 
-          const homeScore = parseInt(homeTeam.score);
-          const awayScore = parseInt(awayTeam.score);
+        const homeScore = parseInt(homeTeam.score);
+        const awayScore = parseInt(awayTeam.score);
 
-          // Determine winner if game has been played
-          const winner =
-            !isNaN(homeScore) && !isNaN(awayScore)
-              ? homeScore > awayScore
-                ? homeTeam.team.displayName
-                : awayTeam.team.displayName
-              : "";
+        // Determine winner if game has been played
+        let winner = !isNaN(homeScore) && !isNaN(awayScore)
+          ? homeScore > awayScore
+            ? homeTeam.team.displayName
+            : awayTeam.team.displayName
+          : "";
 
-          // Only include games that have been played
-          if (winner === "") return null;
+        // Preserve manually edited winner in Firestore
+        if (currentResults[idx] && currentResults[idx].winner !== undefined) {
+          winner = currentResults[idx].winner; // even if empty string
+        }
 
-          return {
-            homeTeam: homeTeam.team.displayName,
-            awayTeam: awayTeam.team.displayName,
-            homeScore,
-            awayScore,
-            winner,
-          };
-        })
-        .filter(Boolean), // remove null entries
+        return {
+          homeTeam: homeTeam.team.displayName,
+          awayTeam: awayTeam.team.displayName,
+          homeScore,
+          awayScore,
+          winner,
+        };
+      }),
     };
 
-    // Update Firestore: schedule (all) and results (only played games)
+    // Update Firestore: schedule and results
     await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
     await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
 
-    logMessage(
-      `✅ Updated schedule & results for Week ${weekNumber} (${updatedResults.results.length} played games)`
-    );
+    logMessage(`✅ Updated schedule & results for Week ${weekNumber} (${updatedResults.results.length} games)`);
 
     // Update leaderboard
     const usersSnapshot = await db.collection('users').get();
@@ -136,20 +134,15 @@ export default async function handler(req, res) {
 
       for (const [weekStr, weekPicks] of Object.entries(picks)) {
         const weekNum = Number(weekStr);
-
-        // Get results for this week
-        const weekResults =
+        const weekData =
           weekNum === weekNumber
             ? updatedResults
-            : (await db
-                .collection('results')
-                .doc(`week${weekNum}`)
-                .get()).data();
-        if (!weekResults) continue;
+            : (await db.collection('results').doc(`week${weekNum}`).get()).data();
 
-        // Count only games with winners
+        if (!weekData || !weekData.results) continue;
+
         let correctCount = 0;
-        weekResults.results.forEach((game, idx) => {
+        weekData.results.forEach((game, idx) => {
           if (game.winner && weekPicks[idx] && weekPicks[idx] === game.winner) {
             correctCount++;
           }
@@ -159,26 +152,22 @@ export default async function handler(req, res) {
         totalCorrect += correctCount;
       }
 
-      await db
-        .collection('users')
-        .doc(userDoc.id)
-        .set(
-          {
-            ...userData,
-            totalCorrect,
-            weeklyRecords,
-          },
-          { merge: true }
-        );
+      await db.collection('users').doc(userDoc.id).set(
+        {
+          ...userData,
+          totalCorrect,
+          weeklyRecords,
+        },
+        { merge: true }
+      );
     }
 
     logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
 
-    res
-      .status(200)
-      .json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
+    res.status(200).json({ message: `Week ${weekNumber} schedule, results, and leaderboard updated` });
   } catch (err) {
     console.error("UpdateAll error:", err);
     res.status(500).json({ error: err.message });
   }
 }
+
