@@ -223,10 +223,16 @@ function App() {
             const userPick = userPicks?.[selectedWeek]?.[index];
             const isLocked = isPickLocked(game?.date);
 
-            const weekResult = results?.find(r => r?.week === selectedWeek);
-            const gameResult = weekResult?.results?.find(
-              g => g.homeTeam === game.homeTeam && g.awayTeam === game.awayTeam
-            );
+            const normalize = (str) =>
+  str?.toLowerCase().replace(/\s+/g, '').trim();
+
+const weekResult = results?.find(r => r?.week === selectedWeek);
+const gameResult = weekResult?.results?.find(
+  g =>
+    normalize(g.homeTeam) === normalize(game.homeTeam) &&
+    normalize(g.awayTeam) === normalize(game.awayTeam)
+);
+
 
             // Compute winner if missing
             const gameWinner = gameResult?.winner ?? (
