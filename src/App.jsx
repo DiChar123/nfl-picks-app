@@ -194,121 +194,117 @@ function App() {
       .toFormat('hh:mm a') + ' ET';
   };
 
-  const isPickLocked = (isoDate) => {
-    if (!isoDate) return false;
-    // compute epoch ms from the UTC iso (absolute time)
-    const gameTime = DateTime.fromISO(isoDate, { zone: 'utc' }).toMillis();
-    return Date.now() >= gameTime - 5 * 60000;
-  };
-  return (
-    <div className="app">
-      <h1>NFL 2025 Touchdown Throwdown</h1>
+const isPickLocked = (isoDate) => {
+  if (!isoDate) return false;
+  // compute epoch ms from the UTC iso (absolute time)
+  const gameTime = DateTime.fromISO(isoDate, { zone: 'utc' }).toMillis();
+  return Date.now() >= gameTime - 5 * 60000;
+};
 
-      <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-        <img src="/app-logo.png" alt="App Logo" style={{ width: '140px', height: 'auto' }} />
-      </div>
+return (
+  <div className="app">
+    <h1>NFL 2025 Touchdown Throwdown</h1>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-        <button onClick={() => setShowLeaderboard(!showLeaderboard)}>
-          {showLeaderboard ? 'Back to Schedule' : 'View Leaderboard'}
-        </button>
-        {!showLeaderboard && <button onClick={handleManualUpdate}>Manual Update</button>}
-      </div>
+    <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+      <img src="/app-logo.png" alt="App Logo" style={{ width: '140px', height: 'auto' }} />
+    </div>
 
-      {!showLeaderboard && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <h2 style={{ margin: 0 }}>Week {selectedWeek}</h2>
-          <div>
-            <label style={{ marginRight: '5px' }}>Select Week:</label>
-            <select value={selectedWeek} onChange={handleWeekChange}>
-              {schedule?.map((week) => (
-                <option key={week.week} value={week.week}>
-                  Week {week.week}
-                </option>
-              ))}
-            </select>
-          </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+      <button onClick={() => setShowLeaderboard(!showLeaderboard)}>
+        {showLeaderboard ? 'Back to Schedule' : 'View Leaderboard'}
+      </button>
+      {!showLeaderboard && <button onClick={handleManualUpdate}>Manual Update</button>}
+    </div>
+
+    {!showLeaderboard && (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h2 style={{ margin: 0 }}>Week {selectedWeek}</h2>
+        <div>
+          <label style={{ marginRight: '5px' }}>Select Week:</label>
+          <select value={selectedWeek} onChange={handleWeekChange}>
+            {schedule?.map((week) => (
+              <option key={week.week} value={week.week}>
+                Week {week.week}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+      </div>
+    )}
 
-      {showLeaderboard ? (
-        <Leaderboard />
-      ) : selectedSchedule?.games?.length ? (
-        <div className="week">
-          {selectedSchedule.games.map((game, index) => {
-            const homeFullName = teamAbbrToFullName[game?.homeTeam] || game?.homeTeam;
-            const awayFullName = teamAbbrToFullName[game?.awayTeam] || game?.awayTeam;
-            const userPick = userPicks?.[selectedWeek]?.[index];
-            const isLocked = isPickLocked(game?.date);
+    {showLeaderboard ? (
+      <Leaderboard />
+    ) : selectedSchedule?.games?.length ? (
+      <div className="week">
+        {selectedSchedule.games.map((game, index) => {
+          const homeFullName = teamAbbrToFullName[game?.homeTeam] || game?.homeTeam;
+          const awayFullName = teamAbbrToFullName[game?.awayTeam] || game?.awayTeam;
+          const userPick = userPicks?.[selectedWeek]?.[index];
+          const isLocked = isPickLocked(game?.date);
 
-            const weekResult = results?.find((r) => r?.week === selectedWeek);
-            const gameResult = weekResult?.results?.find((g) => g?.index === index);
+          const weekResult = results?.find((r) => r?.week === selectedWeek);
+          const gameResult = weekResult?.results?.find((g) => g?.index === index);
 
-            return (
-              <div key={index} className="game">
-                <p style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                  <img src={teamLogos[awayFullName]} alt={awayFullName} width="60" height="60" />
-                  <span>{awayFullName}</span> <span>@</span> <span>{homeFullName}</span>
-                  <img src={teamLogos[homeFullName]} alt={homeFullName} width="60" height="60" />
+          return (
+            <div key={index} className="game">
+              <p style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                <img src={teamLogos[awayFullName]} alt={awayFullName} width="60" height="60" />
+                <span>{awayFullName}</span> <span>@</span> <span>{homeFullName}</span>
+                <img src={teamLogos[homeFullName]} alt={homeFullName} width="60" height="60" />
+              </p>
+              <p style={{ textAlign: 'center', margin: '5px 0' }}>
+                {formatReadableDate(game?.date)} | {formatReadableTime(game?.date)}
+              </p>
+
+              {gameResult?.homeScore != null && gameResult?.awayScore != null && (
+                <p style={{ textAlign: 'center', margin: '5px 0', fontWeight: 'bold' }}>
+                  Score: {gameResult?.awayTeam} {gameResult?.awayScore} — {gameResult?.homeTeam} {gameResult?.homeScore}
                 </p>
-                <p style={{ textAlign: 'center', margin: '5px 0' }}>
-                  {formatReadableDate(game?.date)} | {formatReadableTime(game?.date)}
-                </p>
+              )}
 
-                {gameResult?.homeScore != null && gameResult?.awayScore != null && (
-                  <p style={{ textAlign: 'center', margin: '5px 0', fontWeight: 'bold' }}>
-                    Score: {gameResult?.awayTeam} {gameResult?.awayScore} — {gameResult?.homeTeam} {gameResult?.homeScore}
-                  </p>
-                )}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+                <button
+                  onClick={() => handlePick(selectedWeek, index, awayFullName)}
+                  disabled={isLocked}
+                  className={userPick === awayFullName ? 'selected' : ''}
+                >
+                  Pick {awayFullName}
+                </button>
+                <button
+                  onClick={() => handlePick(selectedWeek, index, homeFullName)}
+                  disabled={isLocked}
+                  className={userPick === homeFullName ? 'selected' : ''}
+                >
+                  Pick {homeFullName}
+                </button>
+              </div>
 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
-                  <button
-                    onClick={() => handlePick(selectedWeek, index, awayFullName)}
-                    disabled={isLocked}
-                    className={userPick === awayFullName ? 'selected' : ''}
-                  >
-                    Pick {awayFullName}
-                  </button>
-                  <button
-                    onClick={() => handlePick(selectedWeek, index, homeFullName)}
-                    disabled={isLocked}
-                    className={userPick === homeFullName ? 'selected' : ''}
-                  >
-                    Pick {homeFullName}
-                  </button>
-                </div>
-
-                {gameResult?.winner ? (
-                  <p
-                    style={{
-                      textAlign: 'center',
-                      color: !userPick
-                        ? 'gray'
-                        : userPick === gameResult.winner
-                        ? 'green'
-                        : 'red',
-                    }}
-                  >
-                    {!userPick
-                      ? `🏆 Winner: ${gameResult.winner}`
-                      : userPick === gameResult.winner
-                      ? '✅ Correct Pick!'
-                      : `❌ Wrong Pick — Winner: ${gameResult.winner}`}
-                  </p>
-                ) : (
-                  isLocked && (
-                    <p style={{ textAlign: 'center' }}>Pick Locked</p>
-                  )
-                )}
-              </div> {/* closes .game div */}
-            );
-          })}
-        </div> {/* closes .week div */}
-      ) : (
-        <p>Loading schedule...</p>
-      )}
-    </div> {/* closes .app div */}
-  );
-}
+              <p
+                style={{
+                  textAlign: 'center',
+                  color: !userPick
+                    ? 'gray'
+                    : userPick === gameResult?.winner
+                    ? 'green'
+                    : 'red',
+                }}
+              >
+                {!userPick
+                  ? gameResult?.winner
+                    ? `🏆 Winner: ${gameResult.winner}`
+                    : 'Pick Locked'
+                  : userPick === gameResult?.winner
+                  ? '✅ Correct Pick!'
+                  : `❌ Wrong Pick — Winner: ${gameResult?.winner}`}
+              </p>
+            </div> // closes .game
+          );
+        })}
+      </div> // closes .week
+    ) : (
+      <p>Loading schedule...</p>
+    )}
+  </div> // closes .app
+);
 
 export default App;
