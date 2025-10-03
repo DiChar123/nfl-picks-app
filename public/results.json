@@ -350,10 +350,123 @@
       }
     ]
   },
-  {
-    "week": 4,
-    "results": []
-  },
+ {
+  "week": 4,
+  "results": [
+    {
+      "homeTeam": "Arizona Cardinals",
+      "awayTeam": "Seattle Seahawks",
+      "homeScore": 20,
+      "awayScore": 23,
+      "winner": "Seattle Seahawks"
+    },
+    {
+      "homeTeam": "Pittsburgh Steelers",
+      "awayTeam": "Minnesota Vikings",
+      "homeScore": 24,
+      "awayScore": 21,
+      "winner": "Pittsburgh Steelers"
+    },
+    {
+      "homeTeam": "Atlanta Falcons",
+      "awayTeam": "Washington Commanders",
+      "homeScore": 34,
+      "awayScore": 27,
+      "winner": "Atlanta Falcons"
+    },
+    {
+      "homeTeam": "Buffalo Bills",
+      "awayTeam": "New Orleans Saints",
+      "homeScore": 31,
+      "awayScore": 19,
+      "winner": "Buffalo Bills"
+    },
+    {
+      "homeTeam": "Detroit Lions",
+      "awayTeam": "Cleveland Browns",
+      "homeScore": 34,
+      "awayScore": 10,
+      "winner": "Detroit Lions"
+    },
+    {
+      "homeTeam": "New England Patriots",
+      "awayTeam": "Carolina Panthers",
+      "homeScore": 42,
+      "awayScore": 13,
+      "winner": "New England Patriots"
+    },
+    {
+      "homeTeam": "New York Giants",
+      "awayTeam": "Los Angeles Chargers",
+      "homeScore": 21,
+      "awayScore": 18,
+      "winner": "New York Giants"
+    },
+    {
+      "homeTeam": "Tampa Bay Buccaneers",
+      "awayTeam": "Philadelphia Eagles",
+      "homeScore": 25,
+      "awayScore": 31,
+      "winner": "Philadelphia Eagles"
+    },
+    {
+      "homeTeam": "Houston Texans",
+      "awayTeam": "Tennessee Titans",
+      "homeScore": 26,
+      "awayScore": 0,
+      "winner": "Houston Texans"
+    },
+    {
+      "homeTeam": "Los Angeles Rams",
+      "awayTeam": "Indianapolis Colts",
+      "homeScore": 27,
+      "awayScore": 20,
+      "winner": "Los Angeles Rams"
+    },
+    {
+      "homeTeam": "San Francisco 49ers",
+      "awayTeam": "Jacksonville Jaguars",
+      "homeScore": 21,
+      "awayScore": 26,
+      "winner": "Jacksonville Jaguars"
+    },
+    {
+      "homeTeam": "Kansas City Chiefs",
+      "awayTeam": "Baltimore Ravens",
+      "homeScore": 37,
+      "awayScore": 20,
+      "winner": "Kansas City Chiefs"
+    },
+    {
+      "homeTeam": "Las Vegas Raiders",
+      "awayTeam": "Chicago Bears",
+      "homeScore": 24,
+      "awayScore": 25,
+      "winner": "Chicago Bears"
+    },
+    {
+      "homeTeam": "Dallas Cowboys",
+      "awayTeam": "Green Bay Packers",
+      "homeScore": 40,
+      "awayScore": 40,
+      "winner": "Green Bay Packers"
+    },
+    {
+      "homeTeam": "Miami Dolphins",
+      "awayTeam": "New York Jets",
+      "homeScore": 27,
+      "awayScore": 21,
+      "winner": "Miami Dolphins"
+    },
+    {
+      "homeTeam": "Denver Broncos",
+      "awayTeam": "Cincinnati Bengals",
+      "homeScore": 28,
+      "awayScore": 3,
+      "winner": "Denver Broncos"
+    }
+  ]
+},
   {
     "week": 5,
     "results": []
