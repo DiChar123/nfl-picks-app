@@ -100,7 +100,7 @@ export default async function handler(req, res) {
             ? homeScore > awayScore
               ? homeTeam.team.displayName
               : awayTeam.team.displayName
-            : '';
+            : ''; // Only set winner if scores exist
 
         return {
           homeTeam: homeTeam.team.displayName,
@@ -137,9 +137,12 @@ export default async function handler(req, res) {
         if (!weekResults) continue;
 
         let correctCount = 0;
-        // ✅ Only count picks that match a game winner (skip unplayed games)
+
+        // Only count picks if that game has a winner
         weekResults.results.forEach((game, idx) => {
-          if (game.winner && weekPicks[idx] === game.winner) correctCount++;
+          if (weekPicks[idx] && game.winner) {
+            if (weekPicks[idx] === game.winner) correctCount++;
+          }
         });
 
         weeklyRecords[weekNum] = correctCount;
