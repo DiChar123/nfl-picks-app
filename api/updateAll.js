@@ -54,27 +54,27 @@ function convertToET(utcString) {
 
 export default async function handler(req, res) {
   try {
-    let games = [];
-    let weekNumber = null;
+    // Fetch current week info to know how many weeks to fetch
+    const initialResponse = await axios.get(
+      'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+    );
+    const currentWeek = initialResponse.data.week?.number || 1;
+    const season = initialResponse.data.season?.year || 2025;
 
-    // Attempt to fetch ESPN API
-    try {
+    // Loop through all weeks from 1 to currentWeek
+    for (let weekNumber = 1; weekNumber <= currentWeek; weekNumber++) {
       const response = await axios.get(
-        'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+        `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${weekNumber}&season=${season}`
       );
-      games = response.data.events || [];
-      weekNumber = response.data.week?.number || 1;
-      logMessage(`✅ Fetched ESPN data for week ${weekNumber} (${games.length} games)`);
-    } catch (err) {
-      console.error("⚠️ Failed to fetch ESPN API:", err.message);
-    }
 
-    // Only update schedule/results if we got games
-    if (games.length > 0 && weekNumber) {
+      const games = response.data.events || [];
+      const byeTeams =
+        response.data.leagues?.[0]?.byeWeekTeams?.map((team) => team.displayName) || [];
+
+      // Build updated schedule
       const updatedSchedule = {
         week: weekNumber,
-        bye:
-          response.data.leagues?.[0]?.byeWeekTeams?.map((team) => team.displayName) || [],
+        bye: byeTeams,
         games: games.map((game) => {
           const competitors = game.competitions[0].competitors;
           const homeTeam = competitors.find((t) => t.homeAway === 'home');
@@ -91,6 +91,7 @@ export default async function handler(req, res) {
         }),
       };
 
+      // Build updated results
       const updatedResults = {
         week: weekNumber,
         results: games.map((game) => {
@@ -117,14 +118,14 @@ export default async function handler(req, res) {
         }),
       };
 
+      // Update Firestore
       await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
       await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
-      logMessage(`✅ Updated schedule & results for Week ${weekNumber}`);
-    } else {
-      logMessage("ℹ️ ESPN API unavailable, skipping schedule/results update");
+
+      logMessage(`✅ Updated schedule & results for Week ${weekNumber} (${games.length} games)`);
     }
 
-    // Update leaderboard (always)
+    // Update leaderboard for all users
     const usersSnapshot = await db.collection('users').get();
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
@@ -134,9 +135,8 @@ export default async function handler(req, res) {
 
       for (const [weekStr, weekPicks] of Object.entries(picks)) {
         const weekNum = Number(weekStr);
-
         const weekResultsDoc = await db.collection('results').doc(`week${weekNum}`).get();
-        const weekResults = weekResultsDoc.exists ? weekResultsDoc.data() : null;
+        const weekResults = weekResultsDoc.data();
         if (!weekResults) continue;
 
         let correctCount = 0;
@@ -151,12 +151,19 @@ export default async function handler(req, res) {
       await db
         .collection('users')
         .doc(userDoc.id)
-        .set({ ...userData, totalCorrect, weeklyRecords }, { merge: true });
+        .set(
+          {
+            ...userData,
+            totalCorrect,
+            weeklyRecords,
+          },
+          { merge: true }
+        );
     }
 
     logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
 
-    res.status(200).json({ message: "Schedule/results (if available) and leaderboard updated" });
+    res.status(200).json({ message: `All weeks updated successfully` });
   } catch (err) {
     console.error("UpdateAll error:", err);
     res.status(500).json({ error: err.message });
