@@ -234,8 +234,12 @@ function App() {
             const userPick = userPicks?.[selectedWeek]?.[index];
             const isLocked = isPickLocked(game?.date);
 
-            const weekResult = results?.find((r) => r?.week === selectedWeek);
-            const gameResult = weekResult?.results?.find((g) => g?.index === index);
+            const weekResult = results?.find(r => r?.week === selectedWeek);
+            // MATCH BY TEAMS INSTEAD OF INDEX
+            const gameResult = weekResult?.results?.find(
+              g =>
+                g.homeTeam === game.homeTeam && g.awayTeam === game.awayTeam
+            );
 
             return (
               <div key={index} className="game">
