@@ -87,6 +87,7 @@ function App() {
       console.error('Error loading picks:', error);
     }
   };
+
   useEffect(() => {
     fetchSchedule();
     fetchResults();
@@ -96,7 +97,6 @@ function App() {
     try {
       const response = await fetch('/schedule.json');
       const data = await response.json();
-
       const formattedData = data.map(week => ({
         ...week,
         games: (week.games || []).map(game => ({
@@ -104,9 +104,7 @@ function App() {
           date: game.date || null
         }))
       }));
-
       setSchedule(formattedData || []);
-
       const validWeek = formattedData.find(w => w.week === selectedWeek);
       if (!validWeek) {
         const firstWeek = formattedData[0]?.week || 1;
@@ -133,7 +131,6 @@ function App() {
       setResults([]);
     }
   };
-
   const handlePick = async (week, gameIndex, team) => {
     const updatedPicks = { ...userPicks };
     const weekPicks = updatedPicks[week] ? { ...updatedPicks[week] } : {};
@@ -160,7 +157,6 @@ function App() {
     try {
       const response = await fetch('/api/updateAll', { method: 'POST' });
       const data = await response.json();
-
       if (response.ok) {
         console.log(`Manual update: ${data.message || 'Success'}`);
         await fetchSchedule();
@@ -197,6 +193,7 @@ function App() {
     const gameTime = DateTime.fromISO(isoDate, { zone: 'utc' }).toMillis();
     return Date.now() >= gameTime - 5 * 60000;
   };
+
   return (
     <div className="app">
       <h1>NFL 2025 Touchdown Throwdown</h1>
@@ -227,7 +224,6 @@ function App() {
           </div>
         </div>
       )}
-
       {showLeaderboard ? (
         <Leaderboard />
       ) : selectedSchedule?.games?.length ? (
