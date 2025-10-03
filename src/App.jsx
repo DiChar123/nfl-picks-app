@@ -229,21 +229,21 @@ function App() {
 const weekResult = results?.find(r => r?.week === selectedWeek);
 const gameResult = weekResult?.results?.find(
   g =>
-    normalize(g.homeTeam) === normalize(game.homeTeam) &&
-    normalize(g.awayTeam) === normalize(game.awayTeam)
+    (g.homeTeam === game.homeTeam || g.homeTeam === teamAbbrToFullName[game.homeTeam]) &&
+    (g.awayTeam === game.awayTeam || g.awayTeam === teamAbbrToFullName[game.awayTeam])
 );
 
+// Compute winner if missing
+const gameWinner = gameResult?.winner ?? (
+  gameResult?.homeScore != null && gameResult?.awayScore != null
+    ? (gameResult.homeScore > gameResult.awayScore
+        ? g.homeTeam
+        : gameResult.awayScore > gameResult.homeScore
+        ? g.awayTeam
+        : null)
+    : null
+);
 
-            // Compute winner if missing
-            const gameWinner = gameResult?.winner ?? (
-              gameResult?.homeScore != null && gameResult?.awayScore != null
-                ? (gameResult.homeScore > gameResult.awayScore
-                    ? gameResult.homeTeam
-                    : gameResult.awayScore > gameResult.homeScore
-                    ? gameResult.awayTeam
-                    : null)
-                : null
-            );
 
             return (
               <div key={index} className="game">
