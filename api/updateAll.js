@@ -133,18 +133,13 @@ export default async function handler(req, res) {
         const weekResults =
           weekNum === weekNumber
             ? updatedResults
-            : (await db
-                .collection('results')
-                .doc(`week${weekNum}`)
-                .get()).data();
+            : (await db.collection('results').doc(`week${weekNum}`).get()).data();
         if (!weekResults) continue;
 
         let correctCount = 0;
+        // ✅ Only count picks that match a game winner (skip unplayed games)
         weekResults.results.forEach((game, idx) => {
-          // ✅ Only count if winner exists
-          if (game.winner && weekPicks[idx] && weekPicks[idx] === game.winner) {
-            correctCount++;
-          }
+          if (game.winner && weekPicks[idx] === game.winner) correctCount++;
         });
 
         weeklyRecords[weekNum] = correctCount;
