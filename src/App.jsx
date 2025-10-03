@@ -97,7 +97,6 @@ function App() {
       const response = await fetch('/schedule.json');
       const data = await response.json();
 
-      // Store raw ESPN ISO dates (UTC). Do NOT convert here.
       const formattedData = data.map(week => ({
         ...week,
         games: (week.games || []).map(game => ({
@@ -179,7 +178,6 @@ function App() {
 
   const selectedSchedule = schedule.find((week) => week.week === selectedWeek);
 
-  // Formatters: parse as UTC, then convert to ET for display
   const formatReadableDate = (isoDate) => {
     if (!isoDate) return 'TBD';
     return DateTime.fromISO(isoDate, { zone: 'utc' })
@@ -280,7 +278,11 @@ function App() {
                 <p
                   style={{
                     textAlign: 'center',
-                    color: !userPick ? 'gray' : userPick === gameResult?.winner ? 'green' : 'red',
+                    color: !userPick
+                      ? 'gray'
+                      : userPick === gameResult?.winner
+                      ? 'green'
+                      : 'red',
                   }}
                 >
                   {!userPick
@@ -291,14 +293,14 @@ function App() {
                     ? '✅ Correct Pick!'
                     : `❌ Wrong Pick — Winner: ${gameResult?.winner}`}
                 </p>
-              </div> // closes .game
+              </div>
             );
           })}
-        </div> // closes .week
+        </div>
       ) : (
         <p>Loading schedule...</p>
       )}
-    </div> // closes .app
+    </div>
   );
 }
 
