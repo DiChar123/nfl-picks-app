@@ -141,7 +141,10 @@ export default async function handler(req, res) {
 
         let correctCount = 0;
         weekResults.results.forEach((game, idx) => {
-          if (weekPicks[idx] && weekPicks[idx] === game.winner) correctCount++;
+          // ✅ Only count if winner exists
+          if (game.winner && weekPicks[idx] && weekPicks[idx] === game.winner) {
+            correctCount++;
+          }
         });
 
         weeklyRecords[weekNum] = correctCount;
