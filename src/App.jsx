@@ -116,7 +116,6 @@ function App() {
       setSchedule([]);
     }
   };
-
   const fetchResults = async () => {
     try {
       const response = await fetch('/results.json');
@@ -131,6 +130,7 @@ function App() {
       setResults([]);
     }
   };
+
   const handlePick = async (week, gameIndex, team) => {
     const updatedPicks = { ...userPicks };
     const weekPicks = updatedPicks[week] ? { ...updatedPicks[week] } : {};
@@ -193,7 +193,6 @@ function App() {
     const gameTime = DateTime.fromISO(isoDate, { zone: 'utc' }).toMillis();
     return Date.now() >= gameTime - 5 * 60000;
   };
-
   return (
     <div className="app">
       <h1>NFL 2025 Touchdown Throwdown</h1>
@@ -224,6 +223,7 @@ function App() {
           </div>
         </div>
       )}
+
       {showLeaderboard ? (
         <Leaderboard />
       ) : selectedSchedule?.games?.length ? (
@@ -274,20 +274,20 @@ function App() {
                 <p
                   style={{
                     textAlign: 'center',
-                    color: !userPick
+                    color: !gameResult?.winner
                       ? 'gray'
-                      : userPick === gameResult?.winner
+                      : userPick === gameResult.winner
                       ? 'green'
                       : 'red',
                   }}
                 >
-                  {!userPick
-                    ? gameResult?.winner
-                      ? `🏆 Winner: ${gameResult.winner}`
-                      : 'Pick Locked'
-                    : userPick === gameResult?.winner
+                  {!gameResult?.winner
+                    ? 'Pick Locked'
+                    : !userPick
+                    ? `🏆 Winner: ${gameResult.winner}`
+                    : userPick === gameResult.winner
                     ? '✅ Correct Pick!'
-                    : `❌ Wrong Pick — Winner: ${gameResult?.winner}`}
+                    : `❌ Wrong Pick — Winner: ${gameResult.winner}`}
                 </p>
               </div>
             );
