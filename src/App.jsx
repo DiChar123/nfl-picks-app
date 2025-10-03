@@ -278,21 +278,36 @@ function App() {
                   </button>
                 </div>
 
-                {gameResult?.winner && (
-                  <p style={{ textAlign: 'center', color: !userPick ? 'gray' : userPick === gameResult.winner ? 'green' : 'red' }}>
-                    {!userPick ? `🏆 Winner: ${gameResult.winner}` : userPick === gameResult.winner ? '✅ Correct Pick!' : `❌ Wrong Pick — Winner: ${gameResult.winner}`}
+                {gameResult?.winner ? (
+                  <p
+                    style={{
+                      textAlign: 'center',
+                      color: !userPick
+                        ? 'gray'
+                        : userPick === gameResult.winner
+                        ? 'green'
+                        : 'red',
+                    }}
+                  >
+                    {!userPick
+                      ? `🏆 Winner: ${gameResult.winner}`
+                      : userPick === gameResult.winner
+                      ? '✅ Correct Pick!'
+                      : `❌ Wrong Pick — Winner: ${gameResult.winner}`}
                   </p>
+                ) : (
+                  isLocked && (
+                    <p style={{ textAlign: 'center' }}>Pick Locked</p>
+                  )
                 )}
-
-                {isLocked && <p style={{ textAlign: 'center' }}>Pick Locked</p>}
-              </div>
+              </div> {/* closes .game div */}
             );
           })}
-        </div>
+        </div> {/* closes .week div */}
       ) : (
         <p>Loading schedule...</p>
       )}
-    </div>
+    </div> {/* closes .app div */}
   );
 }
 
