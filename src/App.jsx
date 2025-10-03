@@ -9,38 +9,17 @@ import { DateTime } from 'luxon';
 
 function App() {
   const teamAbbrToFullName = {
-    PHI: "Philadelphia Eagles",
-    DAL: "Dallas Cowboys",
-    LAR: "Los Angeles Rams",
-    KC: "Kansas City Chiefs",
-    ATL: "Atlanta Falcons",
-    TB: "Tampa Bay Buccaneers",
-    CLE: "Cleveland Browns",
-    CIN: "Cincinnati Bengals",
-    IND: "Indianapolis Colts",
-    MIA: "Miami Dolphins",
-    NE: "New England Patriots",
-    LV: "Las Vegas Raiders",
-    NO: "New Orleans Saints",
-    ARI: "Arizona Cardinals",
-    NYJ: "New York Jets",
-    PIT: "Pittsburgh Steelers",
-    WAS: "Washington Commanders",
-    NYG: "New York Giants",
-    JAX: "Jacksonville Jaguars",
-    CAR: "Carolina Panthers",
-    DEN: "Denver Broncos",
-    TEN: "Tennessee Titans",
-    SEA: "Seattle Seahawks",
-    SF: "San Francisco 49ers",
-    GB: "Green Bay Packers",
-    DET: "Detroit Lions",
-    HOU: "Houston Texans",
-    LAC: "Los Angeles Chargers",
-    BUF: "Buffalo Bills",
-    BAL: "Baltimore Ravens",
-    CHI: "Chicago Bears",
-    MIN: "Minnesota Vikings"
+    PHI: "Philadelphia Eagles", DAL: "Dallas Cowboys", LAR: "Los Angeles Rams",
+    KC: "Kansas City Chiefs", ATL: "Atlanta Falcons", TB: "Tampa Bay Buccaneers",
+    CLE: "Cleveland Browns", CIN: "Cincinnati Bengals", IND: "Indianapolis Colts",
+    MIA: "Miami Dolphins", NE: "New England Patriots", LV: "Las Vegas Raiders",
+    NO: "New Orleans Saints", ARI: "Arizona Cardinals", NYJ: "New York Jets",
+    PIT: "Pittsburgh Steelers", WAS: "Washington Commanders", NYG: "New York Giants",
+    JAX: "Jacksonville Jaguars", CAR: "Carolina Panthers", DEN: "Denver Broncos",
+    TEN: "Tennessee Titans", SEA: "Seattle Seahawks", SF: "San Francisco 49ers",
+    GB: "Green Bay Packers", DET: "Detroit Lions", HOU: "Houston Texans",
+    LAC: "Los Angeles Chargers", BUF: "Buffalo Bills", BAL: "Baltimore Ravens",
+    CHI: "Chicago Bears", MIN: "Minnesota Vikings"
   };
 
   const [selectedWeek, setSelectedWeek] = useState(() => {
@@ -99,10 +78,7 @@ function App() {
       const data = await response.json();
       const formattedData = data.map(week => ({
         ...week,
-        games: (week.games || []).map(game => ({
-          ...game,
-          date: game.date || null
-        }))
+        games: (week.games || []).map(game => ({ ...game, date: game.date || null }))
       }));
       setSchedule(formattedData || []);
       const validWeek = formattedData.find(w => w.week === selectedWeek);
@@ -120,11 +96,24 @@ function App() {
     try {
       const response = await fetch('/results.json');
       const data = await response.json();
-      const indexedResults = (data || []).map((week) => ({
+      // normalize results and compute winner if missing
+      const normalizedResults = (data || []).map(week => ({
         week: week.week,
-        results: (week.results || []).map((game, idx) => ({ ...game, index: idx })),
+        results: (week.results || []).map(game => {
+          const winner =
+            game.winner != null
+              ? game.winner
+              : game.homeScore != null && game.awayScore != null
+              ? game.homeScore > game.awayScore
+                ? game.homeTeam
+                : game.awayScore > game.homeScore
+                ? game.awayTeam
+                : null
+              : null;
+          return { ...game, winner };
+        }),
       }));
-      setResults(indexedResults);
+      setResults(normalizedResults);
     } catch (error) {
       console.error('Error loading results:', error);
       setResults([]);
@@ -225,7 +214,7 @@ function App() {
       )}
 
       {showLeaderboard ? (
-        <Leaderboard />
+        <Leaderboard results={results} userPicks={userPicks} schedule={schedule} />
       ) : selectedSchedule?.games?.length ? (
         <div className="week">
           {selectedSchedule.games.map((game, index) => {
@@ -235,10 +224,19 @@ function App() {
             const isLocked = isPickLocked(game?.date);
 
             const weekResult = results?.find(r => r?.week === selectedWeek);
-            // MATCH BY TEAMS INSTEAD OF INDEX
             const gameResult = weekResult?.results?.find(
-              g =>
-                g.homeTeam === game.homeTeam && g.awayTeam === game.awayTeam
+              g => g.homeTeam === game.homeTeam && g.awayTeam === game.awayTeam
+            );
+
+            // Compute winner if missing
+            const gameWinner = gameResult?.winner ?? (
+              gameResult?.homeScore != null && gameResult?.awayScore != null
+                ? (gameResult.homeScore > gameResult.awayScore
+                    ? gameResult.homeTeam
+                    : gameResult.awayScore > gameResult.homeScore
+                    ? gameResult.awayTeam
+                    : null)
+                : null
             );
 
             return (
@@ -278,20 +276,16 @@ function App() {
                 <p
                   style={{
                     textAlign: 'center',
-                    color: !gameResult?.winner
-                      ? 'gray'
-                      : userPick === gameResult.winner
-                      ? 'green'
-                      : 'red',
+                    color: !gameWinner ? 'gray' : userPick === gameWinner ? 'green' : 'red',
                   }}
                 >
-                  {!gameResult?.winner
+                  {!gameWinner
                     ? 'Pick Locked'
                     : !userPick
-                    ? `🏆 Winner: ${gameResult.winner}`
-                    : userPick === gameResult.winner
+                    ? `🏆 Winner: ${gameWinner}`
+                    : userPick === gameWinner
                     ? '✅ Correct Pick!'
-                    : `❌ Wrong Pick — Winner: ${gameResult.winner}`}
+                    : `❌ Wrong Pick — Winner: ${gameWinner}`}
                 </p>
               </div>
             );
