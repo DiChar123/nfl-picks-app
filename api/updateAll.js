@@ -9,9 +9,15 @@ import { DateTime } from 'luxon';
 let serviceAccount;
 
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  if (serviceAccount.private_key) {
-    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+  } catch (e) {
+    throw new Error(
+      'Failed to parse FIREBASE_SERVICE_ACCOUNT env var. Double-check it is valid JSON with \\n for newlines.'
+    );
   }
 } else {
   const localPath = path.resolve('./src/serviceAccountKey.json');
@@ -48,23 +54,45 @@ function convertToET(utcString) {
 
 export default async function handler(req, res) {
   try {
-    // Determine current NFL season and week
-    const currentSeason = new Date().getFullYear();
-    const currentWeekResponse = await axios.get(
-      `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
-    );
-    const currentWeekNumber = currentWeekResponse.data.week?.number || 1;
+    let games = [];
+    let weekNumber = null;
 
-    const allWeeksResults = [];
+    // Attempt to fetch ESPN API
+    try {
+      const response = await axios.get(
+        'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+      );
+      games = response.data.events || [];
+      weekNumber = response.data.week?.number || 1;
+      logMessage(`✅ Fetched ESPN data for week ${weekNumber} (${games.length} games)`);
+    } catch (err) {
+      console.error("⚠️ Failed to fetch ESPN API:", err.message);
+    }
 
-    // Loop through all weeks from 1 to currentWeekNumber
-    for (let week = 1; week <= currentWeekNumber; week++) {
-      const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week=${week}&season=${currentSeason}`;
-      const response = await axios.get(url);
-      const games = response.data.events || [];
+    // Only update schedule/results if we got games
+    if (games.length > 0 && weekNumber) {
+      const updatedSchedule = {
+        week: weekNumber,
+        bye:
+          response.data.leagues?.[0]?.byeWeekTeams?.map((team) => team.displayName) || [],
+        games: games.map((game) => {
+          const competitors = game.competitions[0].competitors;
+          const homeTeam = competitors.find((t) => t.homeAway === 'home');
+          const awayTeam = competitors.find((t) => t.homeAway === 'away');
+
+          const gameDateUTC = game.date || game.competitions[0]?.startDate || null;
+          const gameDateET = convertToET(gameDateUTC);
+
+          return {
+            homeTeam: homeTeam.team.displayName,
+            awayTeam: awayTeam.team.displayName,
+            date: gameDateET,
+          };
+        }),
+      };
 
       const updatedResults = {
-        week,
+        week: weekNumber,
         results: games.map((game) => {
           const competitors = game.competitions[0].competitors;
           const homeTeam = competitors.find((t) => t.homeAway === 'home');
@@ -72,13 +100,12 @@ export default async function handler(req, res) {
 
           const homeScore = parseInt(homeTeam.score);
           const awayScore = parseInt(awayTeam.score);
-
           const winner =
             !isNaN(homeScore) && !isNaN(awayScore)
               ? homeScore > awayScore
                 ? homeTeam.team.displayName
                 : awayTeam.team.displayName
-              : null;
+              : '';
 
           return {
             homeTeam: homeTeam.team.displayName,
@@ -90,15 +117,14 @@ export default async function handler(req, res) {
         }),
       };
 
-      // Write results to Firestore
-      await db.collection('results').doc(`week${week}`).set(updatedResults);
-
-      allWeeksResults.push(updatedResults);
-
-      logMessage(`✅ Week ${week} results updated (${games.length} games)`);
+      await db.collection('schedule').doc(`week${weekNumber}`).set(updatedSchedule);
+      await db.collection('results').doc(`week${weekNumber}`).set(updatedResults);
+      logMessage(`✅ Updated schedule & results for Week ${weekNumber}`);
+    } else {
+      logMessage("ℹ️ ESPN API unavailable, skipping schedule/results update");
     }
 
-    // Update leaderboard for all users
+    // Update leaderboard (always)
     const usersSnapshot = await db.collection('users').get();
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
@@ -108,8 +134,9 @@ export default async function handler(req, res) {
 
       for (const [weekStr, weekPicks] of Object.entries(picks)) {
         const weekNum = Number(weekStr);
-        const weekResults = allWeeksResults.find((w) => w.week === weekNum);
 
+        const weekResultsDoc = await db.collection('results').doc(`week${weekNum}`).get();
+        const weekResults = weekResultsDoc.exists ? weekResultsDoc.data() : null;
         if (!weekResults) continue;
 
         let correctCount = 0;
@@ -124,23 +151,14 @@ export default async function handler(req, res) {
       await db
         .collection('users')
         .doc(userDoc.id)
-        .set(
-          {
-            ...userData,
-            totalCorrect,
-            weeklyRecords,
-          },
-          { merge: true }
-        );
+        .set({ ...userData, totalCorrect, weeklyRecords }, { merge: true });
     }
 
-    logMessage(`✅ Leaderboard updated for ${usersSnapshot.size} users`);
+    logMessage(`✅ Updated leaderboard for ${usersSnapshot.size} users`);
 
-    res
-      .status(200)
-      .json({ message: `Schedule, results, and leaderboard updated for weeks 1-${currentWeekNumber}` });
+    res.status(200).json({ message: "Schedule/results (if available) and leaderboard updated" });
   } catch (err) {
-    console.error('UpdateAll error:', err);
+    console.error("UpdateAll error:", err);
     res.status(500).json({ error: err.message });
   }
 }
