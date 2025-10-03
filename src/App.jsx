@@ -178,10 +178,20 @@ function App() {
   };
 
   const isPickLocked = (isoDate) => {
-    if (!isoDate) return false;
-    const gameTime = DateTime.fromISO(isoDate, { zone: 'utc' }).toMillis();
-    return Date.now() >= gameTime - 5 * 60000;
-  };
+  if (!isoDate) return false;
+  try {
+    // Convert UTC to ET milliseconds
+    const gameTimeET = DateTime.fromISO(isoDate, { zone: 'utc' })
+      .setZone('America/New_York')
+      .toMillis();
+    // Lock picks 5 minutes before game time ET
+    return Date.now() >= gameTimeET - 5 * 60000;
+  } catch {
+    // If date parsing fails, don't lock the pick
+    return false;
+  }
+};
+
   return (
     <div className="app">
       <h1>NFL 2025 Touchdown Throwdown</h1>
