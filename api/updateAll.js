@@ -61,7 +61,7 @@ export default async function handler(req, res) {
     const games = response.data.events || [];
     const weekNumber = response.data.week?.number || 1;
 
-    // Build updated schedule (all games)
+    // Build updated schedule
     const updatedSchedule = {
       week: weekNumber,
       bye: response.data.leagues?.[0]?.byeWeekTeams?.map(team => team.displayName) || [],
@@ -81,11 +81,11 @@ export default async function handler(req, res) {
       }),
     };
 
-    // Get current Firestore results for the week (if any)
+    // Get current Firestore results for the week
     const weekResultsDoc = await db.collection('results').doc(`week${weekNumber}`).get();
     const currentResults = weekResultsDoc.exists ? weekResultsDoc.data().results || [] : [];
 
-    // Build updated results (preserve manual edits)
+    // Build updated results (preserve manual winner edits)
     const updatedResults = {
       week: weekNumber,
       results: games.map((game, idx) => {
@@ -124,13 +124,13 @@ export default async function handler(req, res) {
 
     logMessage(`✅ Updated schedule & results for Week ${weekNumber} (${updatedResults.results.length} games)`);
 
-    // Update leaderboard
+    // Update leaderboard while preserving manual edits
     const usersSnapshot = await db.collection('users').get();
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
       const picks = userData.picks || {};
       let totalCorrect = 0;
-      const weeklyRecords = {};
+      const weeklyRecords = { ...(userData.weeklyRecords || {}) }; // **start with existing weeklyRecords to preserve manual edits**
 
       for (const [weekStr, weekPicks] of Object.entries(picks)) {
         const weekNum = Number(weekStr);
@@ -148,8 +148,12 @@ export default async function handler(req, res) {
           }
         });
 
-        weeklyRecords[weekNum] = correctCount;
-        totalCorrect += correctCount;
+        // Only update weeklyRecords if not manually overridden
+        if (weeklyRecords[weekNum] === undefined || weeklyRecords[weekNum] === null) {
+          weeklyRecords[weekNum] = correctCount;
+        }
+
+        totalCorrect += weeklyRecords[weekNum]; // use the preserved or computed value
       }
 
       await db.collection('users').doc(userDoc.id).set(
@@ -170,4 +174,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
-
