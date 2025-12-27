@@ -1403,27 +1403,27 @@
       {
         "awayTeam": "ARI",
         "homeTeam": "CIN",
-        "date": null
+        "date": "2025-12-28T17:00:00Z"
       },
       {
         "awayTeam": "BAL",
         "homeTeam": "GB",
-        "date": null
+        "date": "2025-12-28T01:15:00Z"
       },
       {
         "awayTeam": "NYG",
         "homeTeam": "LV",
-        "date": null
+        "date": "2025-12-28T19:25:00Z"
       },
       {
         "awayTeam": "HOU",
         "homeTeam": "LAC",
-        "date": null
+        "date": "2025-12-27T21:30:00Z"
       },
       {
         "awayTeam": "SEA",
         "homeTeam": "CAR",
-        "date": null
+        "date": "2025-12-28T17:00:00Z"
       }
     ]
   },
