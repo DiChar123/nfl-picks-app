@@ -1434,62 +1434,62 @@
       {
         "awayTeam": "NO",
         "homeTeam": "ATL",
-        "date": null
+        "date": "2026-01-04T17:00:00Z"
       },
       {
-        "awayTeam": "NYG",
+        "awayTeam": "NYJ",
         "homeTeam": "BUF",
-        "date": null
+        "date": "2026-01-04T21:30:00Z"
       },
       {
         "awayTeam": "DET",
         "homeTeam": "CHI",
-        "date": null
+        "date": "2026-01-04T21:30:00Z"
       },
       {
         "awayTeam": "CLE",
         "homeTeam": "CIN",
-        "date": null
+        "date": "2026-01-04T17:00:00Z"
       },
       {
-        "awayTeam": "LAR",
+        "awayTeam": "LAC",
         "homeTeam": "DEN",
-        "date": null
+        "date": "2026-01-04T21:30:00Z"
       },
       {
         "awayTeam": "KC",
         "homeTeam": "LV",
-        "date": null
+        "date": "2026-01-04T21:30:00Z"
       },
       {
         "awayTeam": "ARI",
         "homeTeam": "LAC",
-        "date": null
+        "date": "2026-01-04T21:30:00Z"
       },
       {
         "awayTeam": "GB",
         "homeTeam": "MIN",
-        "date": null
+        "date": "2026-01-04T17:00:00Z"
       },
       {
         "awayTeam": "MIA",
         "homeTeam": "NE",
-        "date": null
+        "date": "2026-01-04T21:30:00Z"
       },
       {
         "awayTeam": "DAL",
         "homeTeam": "NYG",
-        "date": null
+        "date": "2026-01-04T17:00:00Z"
       },
       {
         "awayTeam": "WAS",
         "homeTeam": "PHI",
-        "date": null
+        "date": "2026-01-04T21:30:00Z"
       },
       {
         "awayTeam": "BAL",
         "homeTeam": "PIT",
-        "date": null
+        "date": "2026-01-04T23:30:00Z"
       },
       {
         "awayTeam": "SEA",
@@ -1504,12 +1504,12 @@
       {
         "awayTeam": "TEN",
         "homeTeam": "JAX",
-        "date": null
+        "date": "2026-01-04T17:00:00Z"
       },
       {
         "awayTeam": "IND",
         "homeTeam": "HOU",
-        "date": null
+        "date": "2026-01-04T17:00:00Z"
       }
     ]
   }
