@@ -1434,7 +1434,7 @@
       {
         "awayTeam": "NO",
         "homeTeam": "ATL",
-        "date": "2026-01-04T17:00:00Z"
+        "date": "2026-01-04T18:00:00Z"
       },
       {
         "awayTeam": "NYJ",
@@ -1449,7 +1449,7 @@
       {
         "awayTeam": "CLE",
         "homeTeam": "CIN",
-        "date": "2026-01-04T17:00:00Z"
+        "date": "2026-01-04T18:00:00Z"
       },
       {
         "awayTeam": "LAC",
@@ -1469,7 +1469,7 @@
       {
         "awayTeam": "GB",
         "homeTeam": "MIN",
-        "date": "2026-01-04T17:00:00Z"
+        "date": "2026-01-04T18:00:00Z"
       },
       {
         "awayTeam": "MIA",
@@ -1479,7 +1479,7 @@
       {
         "awayTeam": "DAL",
         "homeTeam": "NYG",
-        "date": "2026-01-04T17:00:00Z"
+        "date": "2026-01-04T18:00:00Z"
       },
       {
         "awayTeam": "WAS",
@@ -1504,12 +1504,12 @@
       {
         "awayTeam": "TEN",
         "homeTeam": "JAX",
-        "date": "2026-01-04T17:00:00Z"
+        "date": "2026-01-04T18:00:00Z"
       },
       {
         "awayTeam": "IND",
         "homeTeam": "HOU",
-        "date": "2026-01-04T17:00:00Z"
+        "date": "2026-01-04T18:00:00Z"
       }
     ]
   }
